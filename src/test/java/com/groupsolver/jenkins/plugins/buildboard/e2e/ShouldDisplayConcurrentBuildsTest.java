@@ -16,8 +16,11 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 class ShouldDisplayConcurrentBuildsTest {
 
     @Test
-    void test(Page p, JenkinsRule j) {
-        createPipelineJob(j, "My Pipeline", "pipelineStage.jenkinsfile").run().run();
+    void test(Page p, JenkinsRule j) throws Exception {
+        var job =
+                createPipelineJob(j, "My Pipeline", "pipelineStage.jenkinsfile").get();
+        job.scheduleBuild2(0).waitForStart();
+        job.scheduleBuild2(0).waitForStart();
         var view = createBuildBoardView(j, "Build Monitor").displayAllProjects();
 
         BuildBoardViewPage.from(p, view).goTo().getJob("My Pipeline").hasBuilds("#2", "#1");
