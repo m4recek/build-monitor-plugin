@@ -59,7 +59,7 @@
   </f:section>
 
   <f:section title="${%Build Monitor}">
-    <f:entry title="${%Grouping regex}" description="JavaScript regex without delimiters, matched against the original full display name. The first capture gives the group name; without captures, the full match is used. Groups appear in first-seen order. Unmatched jobs appear under Other. Leave empty to disable grouping.">
+    <f:entry title="${%Grouping regex}" description="JavaScript regex without delimiters, matched against the original full display name. The first participating capture gives the group name; capture position sets group priority. Without captures, the full match is used. Groups with the same priority appear in first-seen order. Unmatched jobs appear under Other. Leave empty to disable grouping.">
       <f:textbox name="groupRegex" value="${it.config.groupRegex}" />
     </f:entry>
 
@@ -129,7 +129,7 @@
   </f:section>
 
   <f:section title="${%Appearance}"
-             description="${%These are the default settings for this view. Users can change these separately in the 'More actions' menu.}">
+             description="${%These are the default settings for this view. Users can change these separately in the settings menu.}">
     <f:entry title="${%Text size}" field="textScale">
       <f:textbox name="textScale" value="${it.textScale}" />
     </f:entry>

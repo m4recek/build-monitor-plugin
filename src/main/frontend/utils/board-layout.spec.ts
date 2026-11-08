@@ -26,6 +26,29 @@ describe("board layout", () => {
     ]);
   });
 
+  it("uses participating capture positions to order groups independently of job order", () => {
+    const input = jobs(
+      "TEST_DEV_one",
+      "TEST_PROD_one",
+      "other",
+      "TEST_PROD_two",
+    );
+    const pages = createBoardPages(input, /_(?:(PROD)|(DEV))_/, 3, 3);
+    expect(
+      pages[0].map((row) => [row.group, row.jobs.map((job) => job.name)]),
+    ).toEqual([
+      ["PROD", ["TEST_PROD_one", "TEST_PROD_two"]],
+      ["DEV", ["TEST_DEV_one"]],
+      ["Other", ["other"]],
+    ]);
+    const reversed = createBoardPages(input, /_(?:(DEV)|(PROD))_/, 3, 3);
+    expect(reversed[0].map((row) => row.group)).toEqual([
+      "DEV",
+      "PROD",
+      "Other",
+    ]);
+  });
+
   it("leaves partial rows empty and continues groups across screens without losing jobs", () => {
     const input = jobs(
       ...Array.from({ length: 9 }, (_, index) => `TEST_PROD_${index}`),

@@ -22,7 +22,7 @@ export function createBoardPages(
     throw new Error("Board columns and rows must be positive integers.");
   }
 
-  const groupedJobs = new Map<string, Job[]>();
+  const groupedJobs = new Map<string, { jobs: Job[]; priority: number }>();
   const unmatched: Job[] = [];
   for (const job of jobs) {
     const match = groupPattern === null ? null : job.name.match(groupPattern);
@@ -30,16 +30,23 @@ export function createBoardPages(
       unmatched.push(job);
       continue;
     }
-    const group = match === null ? "" : (match[1] ?? match[0]);
+    const captureIndex =
+      match?.findIndex((value, index) => index > 0 && value !== undefined) ??
+      -1;
+    const priority = Math.max(captureIndex, 0);
+    const group = match === null ? "" : match[priority];
     const items = groupedJobs.get(group);
     if (items === undefined) {
-      groupedJobs.set(group, [job]);
+      groupedJobs.set(group, { jobs: [job], priority });
     } else {
-      items.push(job);
+      items.jobs.push(job);
+      items.priority = Math.min(items.priority, priority);
     }
   }
 
-  const entries = Array.from(groupedJobs.entries());
+  const entries = Array.from(groupedJobs.entries())
+    .sort((left, right) => left[1].priority - right[1].priority)
+    .map(([group, items]) => [group, items.jobs] as const);
   if (unmatched.length > 0) {
     entries.push(["Other", unmatched]);
   }
