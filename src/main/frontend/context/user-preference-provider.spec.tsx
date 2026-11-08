@@ -52,7 +52,7 @@ describe("row preferences", () => {
     expect(screen.getByLabelText("Rows")).toHaveTextContent("5");
     fireEvent.click(screen.getByText("Reset"));
     expect(screen.getByLabelText("Rows")).toHaveTextContent("3");
-    expect(window.localStorage.getItem("buildMonitor.TV.numberOfRows")).toBe(
+    expect(window.localStorage.getItem("groupsolverBuildBoard.TV.numberOfRows")).toBe(
       "3",
     );
   });
@@ -60,7 +60,7 @@ describe("row preferences", () => {
   it("persists automatic sizing independently for each board", () => {
     const first = render(preferences("TV"));
     fireEvent.click(screen.getByText("Automatic rows"));
-    expect(window.localStorage.getItem("buildMonitor.TV.numberOfRows")).toBe(
+    expect(window.localStorage.getItem("groupsolverBuildBoard.TV.numberOfRows")).toBe(
       "0",
     );
     first.unmount();

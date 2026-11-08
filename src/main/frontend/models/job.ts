@@ -55,7 +55,7 @@ export interface Job {
   }[];
 }
 
-// Aligns with build-monitor-plugin/src/main/java/com/smartcodeltd/jenkinsci/plugins/buildmonitor/viewmodel/CssStatus.java
+// Aligns with build-monitor-plugin/src/main/java/com/groupsolver/jenkins/plugins/buildboard/viewmodel/CssStatus.java
 export type JobStatus =
   | "successful"
   | "unstable"

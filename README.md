@@ -1,4 +1,4 @@
-# Build Monitor Plugin
+# GroupSolver Build Board
 
 [![Gitter](https://badges.gitter.im/jenkinsci/ux-sig.svg)](https://gitter.im/jenkinsci/ux-sig?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/build-monitor-plugin.svg)](https://plugins.jenkins.io/build-monitor-plugin)
@@ -35,6 +35,8 @@ Simple, right? :-) You can have as many Build Monitor Views as you want - the mo
 
 ## Grouped TV boards
 
+The plugin ID is `groupsolver-build-board`, its Java namespace is `com.groupsolver.jenkins.plugins.buildboard`, and its view type is **GroupSolver Build Board**. It installs alongside the official Build Monitor plugin; existing views, classes, resources, and browser preferences remain separate. Third-party dependency versions are unchanged.
+
 This fork adds these configurable settings:
 
 * **Grouping regex**: a JavaScript regular expression without `/` delimiters, matched against the original full display name. Its first capture supplies the group name; if there is no capture, the full match supplies it. Groups appear in first-seen order from the existing job ordering. Unmatched jobs appear in **Other** at the end. Leave empty to disable grouping.
@@ -53,7 +55,9 @@ Use this stripping expression to display `graphql_logic` for `Tests » TEST_DEV_
 ^(?:Tests\s*(?:»|>>|/)\s*)?TEST_(?:PROD|DEV)_
 ```
 
-Build the Jenkins plugin with `mvn verify`; the installable artifact is `target/build-monitor-plugin.hpi`. Frontend checks are `npm test`, `./node_modules/.bin/eslint src/main/frontend/`, `./node_modules/.bin/tsc --noEmit`, and `npm run build`. On Node 24, run tests with `NODE_OPTIONS=--no-experimental-webstorage npm test` so jsdom provides browser storage.
+Verify coexistence with the official plugin using `mvn -Dtest=PluginCoexistenceIT -DofficialBuildMonitorArchive=/absolute/path/build-monitor-plugin.hpi test`. The fixture must be the age-eligible, checksum-verified official HPI. This test loads both plugins, round-trips both view types, reloads Jenkins, and checks their class loaders and descriptors remain distinct.
+
+Build the Jenkins plugin with `mvn verify`; the installable artifact is `target/groupsolver-build-board.hpi`. Frontend checks are `npm test`, `./node_modules/.bin/eslint src/main/frontend/`, `./node_modules/.bin/tsc --noEmit`, and `npm run build`. On Node 24, run tests with `NODE_OPTIONS=--no-experimental-webstorage npm test` so jsdom provides browser storage.
 
 # A picture is worth a thousand words
 

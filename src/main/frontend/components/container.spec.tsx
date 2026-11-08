@@ -87,7 +87,7 @@ describe("board controls", () => {
       { target: { value: "3" } },
     );
     expect(first.container.querySelectorAll(".bm-grid-page")).toHaveLength(1);
-    expect(window.localStorage.getItem("buildMonitor.TV.numberOfRows")).toBe(
+    expect(window.localStorage.getItem("groupsolverBuildBoard.TV.numberOfRows")).toBe(
       "3",
     );
     first.unmount();

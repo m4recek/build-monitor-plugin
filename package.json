@@ -1,7 +1,7 @@
 {
-  "name": "build-monitor-plugin",
+  "name": "groupsolver-build-board",
   "version": "1.0.0",
-  "description": "Build Monitor",
+  "description": "GroupSolver Build Board",
   "private": true,
   "type": "module",
   "scripts": {

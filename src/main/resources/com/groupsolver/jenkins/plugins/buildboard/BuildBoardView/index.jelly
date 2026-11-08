@@ -1,0 +1,21 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+    <l:layout title="${it.displayName}" type="full-screen">
+       <l:main-panel>
+           <div class="bm-board-controls" />
+
+           <div id="app"
+                data-build-board-id="${it.displayName.hashCode()}"
+                data-appearance-text-size="${it.textScale}"
+                data-appearance-maximum-number-of-columns="${it.maxColumns}"
+                data-appearance-color-blind-mode="${it.colourBlindMode}"
+                data-appearance-show-badges="${it.showBadges}"
+                data-auto-refresh-every="${it.autoRefreshEvery}"
+                data-max-rows="${it.config.maxRows == null ? 0 : it.config.maxRows}"
+                data-group-regex="${it.config.groupRegex}"
+                data-name-strip-regex="${it.config.nameStripRegex}" />
+
+           <script src="${rootURL}/plugin/groupsolver-build-board/js/bundles/app.js" type="module" />
+       </l:main-panel>
+    </l:layout>
+</j:jelly>

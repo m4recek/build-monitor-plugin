@@ -26,7 +26,7 @@ const UserPreferencesContext = createContext<MonitorPreferences | undefined>(
 );
 
 const makeKey = (monitorId: string, setTing: string) =>
-  `buildMonitor.${monitorId}.${setTing}`;
+  `groupsolverBuildBoard.${monitorId}.${setTing}`;
 
 const loadFromLocalStorage = <T,>(key: string, fallback: T): T => {
   if (typeof window === "undefined") return fallback;

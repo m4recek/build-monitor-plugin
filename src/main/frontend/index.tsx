@@ -17,7 +17,7 @@ root.render(
   <UseNotificationProvider>
     <UseConfirmationProvider>
       <UserPreferencesProvider
-        monitorId={rootElement.dataset.buildMonitorId!}
+        monitorId={rootElement.dataset.buildBoardId!}
         defaultPreferences={{
           textSize: Number(rootElement.dataset.appearanceTextSize),
           maximumNumberOfColumns: Number(
