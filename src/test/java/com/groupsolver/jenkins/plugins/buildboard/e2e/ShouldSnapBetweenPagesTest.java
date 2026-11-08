@@ -30,6 +30,7 @@ class ShouldSnapBetweenPagesTest {
                 .addJobs(projects)
                 .withMaximumColumns(2)
                 .withTextScale(2.0);
+        view.get().getConfig().setMaxRows(null);
 
         BuildBoardViewPage.from(p, view)
                 .goTo()

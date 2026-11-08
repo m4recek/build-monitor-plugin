@@ -43,6 +43,8 @@ The deadline is the first timer occurrence after completion, including Jenkins `
 
 The plugin ID is `groupsolver-build-board`, its Java namespace is `com.groupsolver.jenkins.plugins.buildboard`, and its view type is **GroupSolver Build Board**. It installs alongside the official Build Monitor plugin; existing views, classes, resources, and browser preferences remain separate. Third-party dependency versions are unchanged.
 
+New boards default to text size **0.5**, **6 columns**, and **6 rows**. Existing saved view settings and per-screen preferences remain configurable.
+
 This fork adds these configurable settings:
 
 * **Grouping regex**: a JavaScript regular expression without `/` delimiters, matched against the original full display name. The first participating capture supplies the group name and its capture position supplies group priority; without captures, the full match supplies the name. Groups with the same priority appear in first-seen order from the existing job ordering. Unmatched jobs appear in **Other** at the end. Leave empty to disable grouping.

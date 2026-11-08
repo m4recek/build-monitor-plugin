@@ -21,7 +21,7 @@ public class Config implements Describable<Config> {
     private Boolean colourBlindMode;
     private Boolean displayCommitters;
     private Integer maxColumns;
-    private Integer maxRows;
+    private Integer maxRows = 6;
     private String groupRegex = "";
     private String nameStripRegex = "";
     private Double textScale;
@@ -126,7 +126,7 @@ public class Config implements Describable<Config> {
     }
 
     public int getMaxColumns() {
-        return Optional.ofNullable(maxColumns).orElse(3);
+        return Optional.ofNullable(maxColumns).orElse(6);
     }
 
     public void setMaxColumns(int maxColumns) {
@@ -164,7 +164,7 @@ public class Config implements Describable<Config> {
     }
 
     public double getTextScale() {
-        return Optional.ofNullable(textScale).orElse(1.0);
+        return Optional.ofNullable(textScale).orElse(0.5);
     }
 
     public void setTextScale(double scale) {
