@@ -4,15 +4,22 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.groupsolver.jenkins.plugins.buildboard.facade.RelativeLocation;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.duration.Duration;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.features.Feature;
+import hudson.FilePath;
+import hudson.Util;
 import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.util.RunList;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Jan Molak
@@ -65,7 +72,7 @@ public class JobView {
         return relative.url();
     }
 
-    public String targetUrl() {
+    public String targetUrl() throws IOException {
         Run<?, ?> build = job.getLastBuild();
         if (build == null) {
             return url();
@@ -75,7 +82,35 @@ public class JobView {
         for (Action action : build.getAllActions()) {
             if (action.getClass().getName().equals("htmlpublisher.HtmlPublisherTarget$HTMLBuildAction")
                     && action.getDisplayName() != null) {
-                return buildUrl + action.getUrlName() + "/";
+                try {
+                    Object target = action.getClass().getMethod("getHTMLTarget").invoke(action);
+                    FilePath archive = (FilePath) target.getClass()
+                            .getMethod("getArchiveTarget", Run.class)
+                            .invoke(target, build);
+                    String reportFiles = (String)
+                            target.getClass().getMethod("getReportFiles").invoke(target);
+                    Path directory = Path.of(archive.getRemote()).normalize();
+                    for (String pattern : reportFiles.split(",")) {
+                        FilePath[] reports = archive.list(pattern.trim());
+                        Arrays.sort(reports, Comparator.comparing(FilePath::getRemote));
+                        for (FilePath report : reports) {
+                            Path path = Path.of(report.getRemote()).normalize();
+                            if (path.startsWith(directory) && report.isDirectory() == false) {
+                                String relativePath =
+                                        directory.relativize(path).toString().replace('\\', '/');
+                                String encodedPath = Arrays.stream(relativePath.split("/"))
+                                        .map(Util::rawEncode)
+                                        .collect(Collectors.joining("/"));
+                                return buildUrl + action.getUrlName() + "/" + encodedPath;
+                            }
+                        }
+                    }
+                } catch (ReflectiveOperationException error) {
+                    throw new IOException("Cannot read the published HTML report configuration", error);
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while locating the published HTML report", error);
+                }
             }
         }
         return buildUrl + "console";

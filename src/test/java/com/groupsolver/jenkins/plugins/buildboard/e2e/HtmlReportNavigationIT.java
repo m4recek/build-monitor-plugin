@@ -48,8 +48,8 @@ class HtmlReportNavigationIT {
         p.locator(".bm-cell")
                 .getByText("#1", new com.microsoft.playwright.Locator.GetByTextOptions().setExact(true))
                 .click();
-        assertThat(p).hasURL(jobUrl + "1/HTML_20Report/");
-        assertThat(p.frameLocator("iframe").locator("h1")).hasText("Latest HTML result");
+        assertThat(p).hasURL(jobUrl + "1/HTML_20Report/index.html");
+        assertThat(p.locator("h1")).hasText("Latest HTML result");
 
         job.setDefinition(new CpsFlowDefinition("echo 'No report for this run'", true));
         j.buildAndAssertSuccess(job);
@@ -61,10 +61,27 @@ class HtmlReportNavigationIT {
         job.setDefinition(new CpsFlowDefinition(publishReport, true));
         var latest = j.buildAndAssertSuccess(job);
         board.goTo().hasJobsCount(1);
-        assertThat(p.locator(".bm-cell")).hasAttribute("href", job.getUrl() + "3/HTML_20Report/");
-        new FilePath(latest.getRootDir().toPath().resolve("htmlreports").toFile()).deleteRecursive();
+        assertThat(p.locator(".bm-cell")).hasAttribute("href", job.getUrl() + "3/HTML_20Report/index.html");
+        new FilePath(latest.getRootDir()
+                        .toPath()
+                        .resolve("htmlreports/HTML_20Report/index.html")
+                        .toFile())
+                .delete();
         board.goTo().hasJobsCount(1);
         p.locator(".bm-cell").click();
         assertThat(p).hasURL(jobUrl + "3/console");
+
+        job.setDefinition(new CpsFlowDefinition("""
+                node {
+                  writeFile file: 'report/details/test result.html', text: '<h1>Custom report entry</h1>'
+                  publishHTML(target: [reportName: 'HTML Report', reportDir: 'report', reportFiles: 'details/*.html',
+                    keepAll: true, alwaysLinkToLastBuild: true, allowMissing: false])
+                }
+                """, true));
+        j.buildAndAssertSuccess(job);
+        board.goTo().hasJobsCount(1);
+        p.locator(".bm-cell").click();
+        assertThat(p).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
+        assertThat(p.locator("h1")).hasText("Custom report entry");
     }
 }

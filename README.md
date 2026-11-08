@@ -33,7 +33,7 @@ To create a new Build Monitor View, click on the "New View" tab, select "Build M
 
 Simple, right? :-) You can have as many Build Monitor Views as you want - the most popular approach is to have one per team or one per project.
 
-Clicking anywhere on a tile opens the latest build’s published HTML report when available; otherwise it opens that build’s console output. A job that has never run opens its job page. Reports from older builds are not used.
+Clicking anywhere on a tile opens the latest build’s published HTML report document when available; otherwise it opens that build’s console output. A job that has never run opens its job page. Reports from older builds are not used. The first existing file matching the publisher’s configured report files opens directly, including nested paths and filename patterns.
 
 ## Result freshness
 
@@ -67,7 +67,7 @@ Use this stripping expression to display `graphql_logic` for `Tests » TEST_DEV_
 
 Verify coexistence with the official plugin using `mvn -Dtest=PluginCoexistenceIT -DofficialBuildMonitorArchive=/absolute/path/build-monitor-plugin.hpi test`. The fixture must be the age-eligible, checksum-verified official HPI. This test loads both plugins, round-trips both view types, reloads Jenkins, and checks their class loaders and descriptors remain distinct.
 
-Verify tile navigation with `mvn -Dtest=HtmlReportNavigationIT -DhtmlPublisherArchive=/absolute/path/htmlpublisher.hpi test`. Use an age-eligible, checksum-verified HTML Publisher HPI; version 427.1 is covered. This browser test publishes a real Pipeline report, follows report and console links in a folder, and checks missing reports and never-built jobs.
+Verify tile navigation with `mvn -Dtest=HtmlReportNavigationIT -DhtmlPublisherArchive=/absolute/path/htmlpublisher.hpi test`. Use an age-eligible, checksum-verified HTML Publisher HPI; version 427.1 is covered. This browser test publishes a real Pipeline report, follows report and console links in a folder, and checks missing report files, nested filename patterns, and never-built jobs.
 
 Build the Jenkins plugin with `mvn verify`; the installable artifact is `target/groupsolver-build-board.hpi`. Frontend checks are `npm test`, `./node_modules/.bin/eslint src/main/frontend/`, `./node_modules/.bin/tsc --noEmit`, and `npm run build`. On Node 24, run tests with `NODE_OPTIONS=--no-experimental-webstorage npm test` so jsdom provides browser storage.
 

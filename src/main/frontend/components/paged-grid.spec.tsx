@@ -70,7 +70,7 @@ describe("paged board", () => {
       makeJob("Tests » TEST_PROD_graphql_logic"),
       makeJob("Tests » TEST_DEV_solver_logic"),
     ];
-    input[0].targetUrl = `${input[0].url}1/HTML_20Report/`;
+    input[0].targetUrl = `${input[0].url}1/HTML_20Report/index.html`;
     input[0].lastCompletedBuild.name = "#1";
     input[0].lastCompletedBuild.timeElapsedSince = 60;
     const { container } = render(board(input));
