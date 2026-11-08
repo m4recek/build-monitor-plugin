@@ -163,6 +163,30 @@ describe("paged board", () => {
     vi.useRealTimers();
   });
 
+  it("preserves native Command and Control-click navigation in history", () => {
+    const job = makeJob("TEST_PROD_history");
+    job.previousBuilds = [
+      { name: "#4", targetUrl: `${job.url}4/console`, status: "failing" },
+    ];
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    const { container } = render(board([job]));
+    fireEvent.contextMenu(container.querySelector("a.bm-cell") as HTMLElement);
+    const previous = screen.getByRole("menuitem", { name: "#4 Failed" });
+    for (const modifiers of [{ metaKey: true }, { ctrlKey: true }]) {
+      const nativeNavigation = vi.fn((event: MouseEvent) => {
+        expect(event.defaultPrevented).toBe(false);
+        // Suppress jsdom navigation after observing the app's decision.
+        event.preventDefault();
+      });
+      document.addEventListener("click", nativeNavigation, { once: true });
+      fireEvent.click(previous, modifiers);
+      expect(nativeNavigation).toHaveBeenCalledOnce();
+    }
+    expect(open).not.toHaveBeenCalled();
+    expect(screen.getByRole("menu")).toBeVisible();
+    open.mockRestore();
+  });
+
   it("opens history after a long touch and cancels it when the finger moves", () => {
     vi.useFakeTimers();
     const { container } = render(board([makeJob("TEST_PROD_history")]));

@@ -13,10 +13,12 @@ import com.microsoft.playwright.junit.Options;
 import com.microsoft.playwright.junit.OptionsFactory;
 import com.microsoft.playwright.junit.UsePlaywright;
 import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.KeyboardModifier;
 import com.microsoft.playwright.options.MouseButton;
 import hudson.FilePath;
 import hudson.model.Result;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -146,6 +148,25 @@ public class HtmlReportNavigationIT {
         assertThat(console).hasURL(jobUrl + "3/console");
         console.close();
         tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+        p.bringToFront();
+        Page backgroundHistory = p.context()
+                .waitForPage(() -> p.getByRole(
+                                AriaRole.MENUITEM,
+                                new Page.GetByRoleOptions().setName("#4 Passed").setExact(true))
+                        .click(new Locator.ClickOptions().setModifiers(List.of(KeyboardModifier.CONTROLORMETA))));
+        assertThat(backgroundHistory).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
+        // Playwright emulates focus for every tab; real selected-tab behavior is checked in Chrome.
+        assertThat(p).hasURL(view.get().getAbsoluteUrl());
+        assertThat(menu).isVisible();
+        backgroundHistory.close();
+        Page middleHistory = p.context()
+                .waitForPage(() -> p.getByRole(
+                                AriaRole.MENUITEM,
+                                new Page.GetByRoleOptions().setName("#3 Passed").setExact(true))
+                        .click(new Locator.ClickOptions().setButton(MouseButton.MIDDLE)));
+        assertThat(middleHistory).hasURL(jobUrl + "3/console");
+        assertThat(p).hasURL(view.get().getAbsoluteUrl());
+        middleHistory.close();
         p.keyboard().down("Shift");
         try {
             Page shiftedHistory = p.context()

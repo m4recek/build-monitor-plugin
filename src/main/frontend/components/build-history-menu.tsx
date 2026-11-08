@@ -99,6 +99,9 @@ export default function BuildHistoryMenu({
           target="_blank"
           rel="noopener noreferrer"
           onClick={(event) => {
+            if (event.metaKey || event.ctrlKey) {
+              return;
+            }
             event.preventDefault();
             openInNewTab(event.currentTarget.href);
             onClose();
