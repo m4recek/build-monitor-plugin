@@ -46,7 +46,9 @@ class ShouldGroupJobsIntoRowsTest {
         var pages = p.locator(".bm-grid-page");
         assertThat(pages.nth(0).locator(".bm-cell")).hasCount(4);
         assertThat(pages.nth(0).locator(".bm-grid-row__group").nth(0)).hasText("PROD");
-        assertThat(pages.nth(0).locator(".bm-grid-row__group").nth(1)).hasText("");
+        assertThat(pages.nth(0).locator(".bm-grid-row__group")).hasCount(1);
+        assertThat(pages.nth(0).locator(".bm-grid-row").nth(1).locator(".bm-grid-row__group"))
+                .hasCount(0);
         assertThat(pages.nth(0).locator(".bm-grid-row").nth(0).locator(".bm-cell"))
                 .hasCount(2);
         assertThat(pages.nth(1).locator(".bm-grid-row")).hasCount(2);
@@ -78,6 +80,21 @@ class ShouldGroupJobsIntoRowsTest {
         p.locator(".bm-grid-row").evaluateAll("""
                 rows => Promise.all(rows.flatMap(row => row.getAnimations()).map(animation => animation.finished))
                 """);
+        var firstRow = pages.nth(0).locator(".bm-grid-row").nth(0);
+        var firstTile = firstRow.locator(".bm-cell").nth(0).boundingBox();
+        var nextTile = firstRow.locator(".bm-cell").nth(1).boundingBox();
+        var nextRowTile = pages.nth(0)
+                .locator(".bm-grid-row")
+                .nth(1)
+                .locator(".bm-cell")
+                .nth(0)
+                .boundingBox();
+        assertEquals(
+                nextTile.x - firstTile.x - firstTile.width,
+                nextRowTile.y - firstTile.y - firstTile.height,
+                0.5,
+                "Continuation rows must use the same tile gap as columns");
+        assertThat(firstRow.locator(".bm-grid-row__group")).hasCSS("font-size", "16px");
         double devX = pages.nth(1)
                 .locator(".bm-grid-row")
                 .nth(1)

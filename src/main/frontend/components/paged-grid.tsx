@@ -141,11 +141,10 @@ function PagedGrid({
                     key={row.jobs[0].url}
                     aria-label={row.group || undefined}
                   >
-                    {row.group !== "" && (
-                      <div className="bm-grid-row__group">
-                        {(row.startsGroup || rowIndex === 0) && row.group}
-                      </div>
-                    )}
+                    {row.group !== "" &&
+                      (row.startsGroup || rowIndex === 0) && (
+                        <div className="bm-grid-row__group">{row.group}</div>
+                      )}
                     <div
                       className="bm-grid-row__jobs"
                       style={{

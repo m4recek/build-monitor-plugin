@@ -45,7 +45,7 @@ The deadline is the first timer occurrence after completion, including Jenkins `
 
 The plugin ID is `groupsolver-build-board`, its Java namespace is `com.groupsolver.jenkins.plugins.buildboard`, and its view type is **GroupSolver Build Board**. It installs alongside the official Build Monitor plugin; existing views, classes, resources, and browser preferences remain separate. Third-party dependency versions are unchanged.
 
-New boards default to text size **0.5**, **6 columns**, and **6 rows**. Existing saved view settings and per-screen preferences remain configurable. Group labels use 16px text independently of tile text size; tile grid gaps are 6.5px with the standard Jenkins spacing.
+New boards default to text size **0.5**, **6 columns**, and **6 rows**. Existing saved view settings and per-screen preferences remain configurable. Group labels use 16px text independently of tile text size and reserve space only at the start of a group or page; tile grid gaps are 6.5px with the standard Jenkins spacing.
 
 This fork adds these configurable settings:
 
@@ -53,7 +53,7 @@ This fork adds these configurable settings:
 * **Strip job name regex**: removes every matching substring from tile headings. Job names, URLs, ordering within groups, and build data remain unchanged. Leave empty to show original names.
 * **Rows per screen**: a positive integer fixes the number of rows; columns × rows gives the screen's slot capacity. Leave the view field empty for viewport-based row sizing. The settings menu also provides a rows slider alongside the original column and text-size controls; zero selects automatic sizing. Per-screen row preferences persist and reset to the view's setting.
 
-Each group starts at the first column of a fresh row. A partial group row keeps its remaining slots empty; subsequent groups can use the remaining rows on that screen. Overflow continues on the next screen, repeating the group heading when necessary. Existing swipe/scroll navigation, page buttons, and job refresh timing apply. There is no automatic page rotation.
+Each group starts at the first column of a fresh row. Continuation rows have no empty label placeholder, so their vertical tile gap matches the horizontal gap. A partial group row keeps its remaining slots empty; subsequent groups can use the remaining rows on that screen. Overflow continues on the next screen, repeating the group heading when necessary. Existing swipe/scroll navigation, page buttons, and job refresh timing apply. There is no automatic page rotation.
 
 The board fills the screen without the Jenkins header. Only the rounded settings button remains in its upper-right position, at 95% transparency until hovered, keyboard-focused, or opened.
 
