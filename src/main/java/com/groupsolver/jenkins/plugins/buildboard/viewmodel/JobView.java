@@ -73,7 +73,23 @@ public class JobView {
     }
 
     public String targetUrl() throws IOException {
-        Run<?, ?> build = job.getLastBuild();
+        return targetUrl(job.getLastBuild());
+    }
+
+    public List<PreviousBuild> previousBuilds() throws IOException {
+        List<PreviousBuild> builds = new ArrayList<>();
+        Run<?, ?> latest = job.getLastBuild();
+        Run<?, ?> build = latest == null ? null : latest.getPreviousBuild();
+        while (build != null && builds.size() < 5) {
+            builds.add(new PreviousBuild(build.getDisplayName(), targetUrl(build)));
+            build = build.getPreviousBuild();
+        }
+        return builds;
+    }
+
+    public record PreviousBuild(String name, String targetUrl) {}
+
+    private String targetUrl(Run<?, ?> build) throws IOException {
         if (build == null) {
             return url();
         }

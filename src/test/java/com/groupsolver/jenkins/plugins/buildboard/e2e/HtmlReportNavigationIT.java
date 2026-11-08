@@ -2,14 +2,22 @@ package com.groupsolver.jenkins.plugins.buildboard.e2e;
 
 import static com.groupsolver.jenkins.plugins.buildboard.e2e.utils.BuildBoardViewUtils.createBuildBoardView;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
-import com.groupsolver.jenkins.plugins.buildboard.e2e.config.PlaywrightConfig;
 import com.groupsolver.jenkins.plugins.buildboard.e2e.pages.BuildBoardViewPage;
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.junit.Options;
+import com.microsoft.playwright.junit.OptionsFactory;
 import com.microsoft.playwright.junit.UsePlaywright;
+import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.KeyboardModifier;
+import com.microsoft.playwright.options.MouseButton;
 import hudson.FilePath;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.jupiter.api.Test;
@@ -17,8 +25,15 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 @WithJenkins
-@UsePlaywright(PlaywrightConfig.class)
-class HtmlReportNavigationIT {
+@UsePlaywright(HtmlReportNavigationIT.NavigationBrowser.class)
+public class HtmlReportNavigationIT {
+    public static class NavigationBrowser implements OptionsFactory {
+        @Override
+        public Options getOptions() {
+            return new Options().setBrowserName("chromium").setChannel("chromium");
+        }
+    }
+
     @Test
     void opensLatestBuildReportOrConsoleIncludingBuildNumberClicks(Page p, JenkinsRule j) throws Exception {
         j.jenkins
@@ -83,5 +98,60 @@ class HtmlReportNavigationIT {
         p.locator(".bm-cell").click();
         assertThat(p).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
         assertThat(p.locator("h1")).hasText("Custom report entry");
+
+        job.setDefinition(new CpsFlowDefinition("echo 'Recent console run'", true));
+        j.buildAndAssertSuccess(job);
+        j.buildAndAssertSuccess(job);
+        j.buildAndAssertSuccess(job);
+        board.goTo().hasJobsCount(1);
+        var tile = p.locator(".bm-cell");
+        tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+        var menu = p.getByRole(AriaRole.MENU);
+        assertThat(menu.getByRole(AriaRole.MENUITEM)).hasCount(5);
+        assertThat(menu.getByRole(AriaRole.MENUITEM).first()).hasText("#6");
+        assertThat(menu.getByRole(AriaRole.MENUITEM).last()).hasText("#2");
+        Page html = p.context()
+                .waitForPage(() -> menu.getByRole(
+                                AriaRole.MENUITEM,
+                                new Locator.GetByRoleOptions().setName("#4").setExact(true))
+                        .click());
+        assertThat(html).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
+        assertThat(html.locator("h1")).hasText("Custom report entry");
+        assertEquals(
+                p.context().newCDPSession(p).send("Browser.getWindowForTarget").get("windowId"),
+                p.context()
+                        .newCDPSession(html)
+                        .send("Browser.getWindowForTarget")
+                        .get("windowId"),
+                "History links must open a tab in the same browser window");
+        html.close();
+        assertThat(menu).hasCount(0);
+        tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+        Page console = p.context()
+                .waitForPage(() -> p.getByRole(
+                                AriaRole.MENUITEM,
+                                new Page.GetByRoleOptions().setName("#3").setExact(true))
+                        .click());
+        assertThat(console).hasURL(jobUrl + "3/console");
+        console.close();
+        Page shifted = p.context()
+                .waitForPage(
+                        () -> tile.click(new Locator.ClickOptions().setModifiers(List.of(KeyboardModifier.SHIFT))));
+        assertThat(shifted).hasURL(jobUrl + "7/console");
+        assertEquals(
+                p.context().newCDPSession(p).send("Browser.getWindowForTarget").get("windowId"),
+                p.context()
+                        .newCDPSession(shifted)
+                        .send("Browser.getWindowForTarget")
+                        .get("windowId"),
+                "Shift-click must open a tab in the same browser window");
+        shifted.close();
+        tile.dispatchEvent("pointerdown", Map.of("pointerType", "touch", "clientX", 100, "clientY", 100));
+        assertThat(p.getByRole(AriaRole.MENU)).isVisible();
+        tile.dispatchEvent("pointerup", Map.of("pointerType", "touch"));
+        tile.dispatchEvent("click");
+        assertThat(p).hasURL(view.get().getAbsoluteUrl());
+        p.keyboard().press("Escape");
+        assertThat(p.getByRole(AriaRole.MENU)).hasCount(0);
     }
 }

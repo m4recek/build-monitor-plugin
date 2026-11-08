@@ -29,6 +29,7 @@ beforeEach(() => {
           name: `Tests » TEST_DEV_job_${index}`,
           url: `/job/${index}/`,
           targetUrl: `/job/${index}/1/console`,
+          previousBuilds: [],
           status: "successful",
           progress: 0,
           resultOpacity: 1,
