@@ -80,6 +80,10 @@ public class JobView {
         return null != duration ? duration.value() : "";
     }
 
+    public double resultOpacity() {
+        return ResultFreshness.opacity(job, systemTime.getTime());
+    }
+
     public int progress() {
         return lastBuild().progress();
     }

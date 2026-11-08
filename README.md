@@ -33,6 +33,12 @@ To create a new Build Monitor View, click on the "New View" tab, select "Build M
 
 Simple, right? :-) You can have as many Build Monitor Views as you want - the most popular approach is to have one per team or one per project.
 
+## Result freshness
+
+Each scheduled job fades from opacity 1.0 after its last completed result to 0.2 at its next timer occurrence. The interval is divided into eight equal parts, dropping opacity by 0.1 at each boundary. Overdue results stay at 0.2 until a new result arrives. Freshness updates with the normal board refresh, using the Jenkins controller clock. Running jobs stay fully visible; jobs without a completed result or a predictable timer schedule retain their normal appearance.
+
+The deadline is the first timer occurrence after completion, including Jenkins `H` hashing, multiline schedules and `TZ=` time zones. It remains anchored to that result so a missed run cannot make an old result brighter again. Job schedules and build execution are unchanged.
+
 ## Grouped TV boards
 
 The plugin ID is `groupsolver-build-board`, its Java namespace is `com.groupsolver.jenkins.plugins.buildboard`, and its view type is **GroupSolver Build Board**. It installs alongside the official Build Monitor plugin; existing views, classes, resources, and browser preferences remain separate. Third-party dependency versions are unchanged.

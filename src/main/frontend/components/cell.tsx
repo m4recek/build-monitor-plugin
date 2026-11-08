@@ -21,6 +21,7 @@ function Cell({
   return (
     <a
       href={job.url}
+      style={job.disabled ? undefined : { opacity: job.resultOpacity }}
       className={
         "bm-cell bm-cell" +
         buildStatusToClass(job) +

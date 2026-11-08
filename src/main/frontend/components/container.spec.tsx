@@ -30,6 +30,7 @@ beforeEach(() => {
           url: `/job/${index}/`,
           status: "successful",
           progress: 0,
+          resultOpacity: 1,
           estimatedDuration: "",
           config: { displayBadges: "Never" },
           headline: "",

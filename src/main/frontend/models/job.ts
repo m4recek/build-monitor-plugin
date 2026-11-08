@@ -4,6 +4,7 @@ export interface Job {
   status: JobStatus;
   disabled: boolean;
   hashCode: number;
+  resultOpacity: number;
   progress: number;
   estimatedDuration: string;
   config: {

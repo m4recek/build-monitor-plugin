@@ -27,6 +27,7 @@ const makeJob = (name: string): Job => ({
   disabled: false,
   hashCode: 1,
   progress: 0,
+  resultOpacity: 1,
   estimatedDuration: "",
   config: { displayBadges: "Never" },
   headline: "",
@@ -84,6 +85,27 @@ describe("paged board", () => {
       gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
     });
     expect(screen.queryByLabelText("Build monitor pages")).toBeNull();
+  });
+
+  it("applies server-clock freshness and restores full opacity after a new result", () => {
+    const job = makeJob("TEST_PROD_graphql_logic");
+    job.resultOpacity = 0.2;
+    const view = render(board([job]));
+    expect(view.container.querySelector(".bm-cell")).toHaveStyle({
+      opacity: "0.2",
+    });
+    view.rerender(board([{ ...job, resultOpacity: 0.6 }]));
+    expect(view.container.querySelector(".bm-cell")).toHaveStyle({
+      opacity: "0.6",
+    });
+    view.rerender(board([{ ...job, resultOpacity: 1 }]));
+    expect(view.container.querySelector(".bm-cell")).toHaveStyle({
+      opacity: "1",
+    });
+    view.rerender(board([{ ...job, disabled: true }]));
+    expect(
+      (view.container.querySelector(".bm-cell") as HTMLElement).style.opacity,
+    ).toBe("");
   });
 
   it("navigates, clamps the active page after refresh, and realigns after resize", () => {
