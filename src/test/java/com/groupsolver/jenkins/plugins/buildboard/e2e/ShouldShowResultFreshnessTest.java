@@ -9,6 +9,8 @@ import com.groupsolver.jenkins.plugins.buildboard.e2e.pages.BuildBoardViewPage;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.junit.UsePlaywright;
 import hudson.triggers.TimerTrigger;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.jupiter.api.Test;
@@ -25,10 +27,12 @@ class ShouldShowResultFreshnessTest {
         });
         WorkflowJob job = j.createProject(WorkflowJob.class, "TEST_PROD_freshness");
         job.setDefinition(new CpsFlowDefinition("echo 'fresh result'", true));
-        job.addTrigger(new TimerTrigger("H * * * *"));
+        LocalDate scheduledDate = LocalDate.now(ZoneOffset.UTC).plusDays(2);
+        job.addTrigger(new TimerTrigger(
+                "TZ=UTC\n0 0 %s %s *".formatted(scheduledDate.getDayOfMonth(), scheduledDate.getMonthValue())));
         j.buildAndAssertSuccess(job);
         var view = createBuildBoardView(j, "Freshness").addJobs(job);
-        view.get().setAutoRefreshEvery(1);
+        view.get().getConfig().setAutoRefreshEvery(1);
         BuildBoardViewPage.from(p, view).goTo().hasJobsCount(1);
         assertThat(p.locator(".bm-cell")).hasCSS("opacity", "1");
         Object opacity = p.evaluate("""
