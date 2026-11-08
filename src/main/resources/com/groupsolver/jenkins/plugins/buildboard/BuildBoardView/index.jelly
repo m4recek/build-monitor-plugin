@@ -15,7 +15,7 @@
                 data-group-regex="${it.config.groupRegex}"
                 data-name-strip-regex="${it.config.nameStripRegex}" />
 
-           <script src="${rootURL}/plugin/groupsolver-build-board/js/bundles/app.js" type="module" />
+           <script src="${rootURL}/plugin/groupsolver-build-board/js/bundles/app.js?version=${app.pluginManager.getPlugin('groupsolver-build-board').version}" type="module" />
        </l:main-panel>
     </l:layout>
 </j:jelly>

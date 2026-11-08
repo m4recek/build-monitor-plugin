@@ -4,6 +4,7 @@ import static com.groupsolver.jenkins.plugins.buildboard.e2e.utils.BuildBoardVie
 import static com.groupsolver.jenkins.plugins.buildboard.e2e.utils.FreeStyleProjectUtils.createFreeStyleProject;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.groupsolver.jenkins.plugins.buildboard.e2e.config.PlaywrightConfig;
 import com.groupsolver.jenkins.plugins.buildboard.e2e.pages.BuildBoardViewPage;
@@ -35,6 +36,13 @@ class ShouldGroupJobsIntoRowsTest {
         view.get().getConfig().setNameStripRegex("^TEST_(?:PROD|DEV)_");
 
         BuildBoardViewPage.from(p, view).goTo().hasJobsCount(6).hasPageCount(2);
+        assertTrue(p.locator("script[src*=\"/plugin/groupsolver-build-board/\"]")
+                .getAttribute("src")
+                .endsWith("?version="
+                        + j.jenkins
+                                .getPluginManager()
+                                .getPlugin("groupsolver-build-board")
+                                .getVersion()));
         var pages = p.locator(".bm-grid-page");
         assertThat(pages.nth(0).locator(".bm-cell")).hasCount(4);
         assertThat(pages.nth(0).locator(".bm-grid-row__group").nth(0)).hasText("PROD");
