@@ -1,6 +1,7 @@
 export interface Job {
   name: string;
   url: string;
+  targetUrl: string;
   status: JobStatus;
   disabled: boolean;
   hashCode: number;

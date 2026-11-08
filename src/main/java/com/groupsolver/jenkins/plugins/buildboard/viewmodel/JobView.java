@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.groupsolver.jenkins.plugins.buildboard.facade.RelativeLocation;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.duration.Duration;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.features.Feature;
+import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -62,6 +63,22 @@ public class JobView {
 
     public String url() {
         return relative.url();
+    }
+
+    public String targetUrl() {
+        Run<?, ?> build = job.getLastBuild();
+        if (build == null) {
+            return url();
+        }
+
+        String buildUrl = url().replaceAll("/+$", "") + "/" + build.getNumber() + "/";
+        for (Action action : build.getAllActions()) {
+            if (action.getClass().getName().equals("htmlpublisher.HtmlPublisherTarget$HTMLBuildAction")
+                    && action.getDisplayName() != null) {
+                return buildUrl + action.getUrlName() + "/";
+            }
+        }
+        return buildUrl + "console";
     }
 
     public String status() {

@@ -23,6 +23,7 @@ beforeEach(() => {
 const makeJob = (name: string): Job => ({
   name,
   url: `/job/${name}/`,
+  targetUrl: `/job/${name}/1/console`,
   status: "successful",
   disabled: false,
   hashCode: 1,
@@ -69,13 +70,22 @@ describe("paged board", () => {
       makeJob("Tests » TEST_PROD_graphql_logic"),
       makeJob("Tests » TEST_DEV_solver_logic"),
     ];
+    input[0].targetUrl = `${input[0].url}1/HTML_20Report/`;
+    input[0].lastCompletedBuild.name = "#1";
+    input[0].lastCompletedBuild.timeElapsedSince = 60;
     const { container } = render(board(input));
     expect(
       screen.getByRole("heading", { name: "graphql_logic" }).closest("a"),
-    ).toHaveAttribute("href", input[0].url);
+    ).toHaveAttribute("href", input[0].targetUrl);
     expect(
       screen.getByRole("heading", { name: "solver_logic" }).closest("a"),
-    ).toHaveAttribute("href", input[1].url);
+    ).toHaveAttribute("href", input[1].targetUrl);
+    expect(screen.getByText("#1").closest("a")).toHaveAttribute(
+      "href",
+      input[0].targetUrl,
+    );
+    expect(container.querySelectorAll(".bm-cell a")).toHaveLength(0);
+    expect(input[0].url).toBe("/job/Tests » TEST_PROD_graphql_logic/");
     expect(input[0].name).toBe("Tests » TEST_PROD_graphql_logic");
     expect(container.querySelectorAll(".bm-grid-row")).toHaveLength(2);
     expect(

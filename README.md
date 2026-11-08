@@ -33,6 +33,8 @@ To create a new Build Monitor View, click on the "New View" tab, select "Build M
 
 Simple, right? :-) You can have as many Build Monitor Views as you want - the most popular approach is to have one per team or one per project.
 
+Clicking anywhere on a tile opens the latest build’s published HTML report when available; otherwise it opens that build’s console output. A job that has never run opens its job page. Reports from older builds are not used.
+
 ## Result freshness
 
 Each scheduled job fades from opacity 1.0 after its last completed result to 0.2 at its next timer occurrence. The interval is divided into eight equal parts, dropping opacity by 0.1 at each boundary. Overdue results stay at 0.2 until a new result arrives. Freshness updates with the normal board refresh, using the Jenkins controller clock. Running jobs stay fully visible; jobs without a completed result or a predictable timer schedule retain their normal appearance.
@@ -64,6 +66,8 @@ Use this stripping expression to display `graphql_logic` for `Tests » TEST_DEV_
 ```
 
 Verify coexistence with the official plugin using `mvn -Dtest=PluginCoexistenceIT -DofficialBuildMonitorArchive=/absolute/path/build-monitor-plugin.hpi test`. The fixture must be the age-eligible, checksum-verified official HPI. This test loads both plugins, round-trips both view types, reloads Jenkins, and checks their class loaders and descriptors remain distinct.
+
+Verify tile navigation with `mvn -Dtest=HtmlReportNavigationIT -DhtmlPublisherArchive=/absolute/path/htmlpublisher.hpi test`. Use an age-eligible, checksum-verified HTML Publisher HPI; version 427.1 is covered. This browser test publishes a real Pipeline report, follows report and console links in a folder, and checks missing reports and never-built jobs.
 
 Build the Jenkins plugin with `mvn verify`; the installable artifact is `target/groupsolver-build-board.hpi`. Frontend checks are `npm test`, `./node_modules/.bin/eslint src/main/frontend/`, `./node_modules/.bin/tsc --noEmit`, and `npm run build`. On Node 24, run tests with `NODE_OPTIONS=--no-experimental-webstorage npm test` so jsdom provides browser storage.
 

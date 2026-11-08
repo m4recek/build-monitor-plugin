@@ -15,6 +15,7 @@ public class JobViewSerialiser extends JsonSerializer<JobView> {
         jgen.writeStartObject();
         jgen.writeObjectField("name", job.name());
         jgen.writeObjectField("url", job.url());
+        jgen.writeObjectField("targetUrl", job.targetUrl());
         jgen.writeObjectField("status", job.status());
         jgen.writeObjectField("disabled", job.isDisabled());
         jgen.writeObjectField("hashCode", job.hashCode());

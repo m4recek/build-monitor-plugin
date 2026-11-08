@@ -20,7 +20,7 @@ function Cell({
 
   return (
     <a
-      href={job.url}
+      href={job.targetUrl}
       style={job.disabled ? undefined : { opacity: job.resultOpacity }}
       className={
         "bm-cell bm-cell" +

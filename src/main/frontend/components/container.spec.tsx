@@ -28,6 +28,7 @@ beforeEach(() => {
         data: Array.from({ length: 5 }, (_, index) => ({
           name: `Tests » TEST_DEV_job_${index}`,
           url: `/job/${index}/`,
+          targetUrl: `/job/${index}/1/console`,
           status: "successful",
           progress: 0,
           resultOpacity: 1,
