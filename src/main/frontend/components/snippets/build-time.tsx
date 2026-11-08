@@ -22,7 +22,9 @@ export default function BuildTime({ job }: { job: Job }) {
 
       {hasLastCompletedBuild && (
         <div className="bm-build-time">
-          <Label text={time(job.lastCompletedBuild.timeElapsedSince)} />
+          <Label
+            text={time(job.lastCompletedBuild.timeElapsedSince, job.status)}
+          />
         </div>
       )}
     </div>
