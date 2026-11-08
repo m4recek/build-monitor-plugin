@@ -20,12 +20,57 @@
     font-size: 0.85rem;
   }
 
+  &__run--successful {
+    --bm-run-color: var(--success-color);
+  }
+  &__run--failing {
+    --bm-run-color: var(--destructive-color);
+  }
+  &__run--unstable {
+    --bm-run-color: var(--warning-color);
+  }
+  &__run--running {
+    --bm-run-color: var(--blue);
+  }
+  &__run--aborted,
+  &__run--unknown {
+    --bm-run-color: var(--text-color-secondary);
+  }
+
+  &__result {
+    color: var(--bm-run-color);
+    font-size: 0.85rem;
+  }
+
   [role="menuitem"] {
     display: block;
     padding: 0.65rem 0.75rem;
     border-radius: 0.4rem;
     color: inherit;
     text-decoration: none;
+
+    &.bm-build-history__run {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-block: 0.2rem;
+      border-inline-start: 4px solid var(--bm-run-color);
+      background: color-mix(
+        in srgb,
+        var(--bm-run-color) 22%,
+        var(--background)
+      );
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(
+          in srgb,
+          var(--bm-run-color) 38%,
+          var(--background)
+        );
+      }
+    }
 
     &:hover,
     &:focus-visible {

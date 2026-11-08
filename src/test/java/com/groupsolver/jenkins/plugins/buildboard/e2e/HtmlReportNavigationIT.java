@@ -3,6 +3,7 @@ package com.groupsolver.jenkins.plugins.buildboard.e2e;
 import static com.groupsolver.jenkins.plugins.buildboard.e2e.utils.BuildBoardViewUtils.createBuildBoardView;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.groupsolver.jenkins.plugins.buildboard.e2e.pages.BuildBoardViewPage;
@@ -12,11 +13,10 @@ import com.microsoft.playwright.junit.Options;
 import com.microsoft.playwright.junit.OptionsFactory;
 import com.microsoft.playwright.junit.UsePlaywright;
 import com.microsoft.playwright.options.AriaRole;
-import com.microsoft.playwright.options.KeyboardModifier;
 import com.microsoft.playwright.options.MouseButton;
 import hudson.FilePath;
+import hudson.model.Result;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -101,19 +101,30 @@ public class HtmlReportNavigationIT {
 
         job.setDefinition(new CpsFlowDefinition("echo 'Recent console run'", true));
         j.buildAndAssertSuccess(job);
-        j.buildAndAssertSuccess(job);
+        job.setDefinition(new CpsFlowDefinition("error 'Expected history failure'", true));
+        j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
+        job.setDefinition(new CpsFlowDefinition("echo 'Latest successful run'", true));
         j.buildAndAssertSuccess(job);
         board.goTo().hasJobsCount(1);
         var tile = p.locator(".bm-cell");
         tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
         var menu = p.getByRole(AriaRole.MENU);
         assertThat(menu.getByRole(AriaRole.MENUITEM)).hasCount(5);
-        assertThat(menu.getByRole(AriaRole.MENUITEM).first()).hasText("#6");
-        assertThat(menu.getByRole(AriaRole.MENUITEM).last()).hasText("#2");
+        assertThat(menu.getByRole(AriaRole.MENUITEM).first()).hasText("#6 Failed");
+        assertThat(menu.getByRole(AriaRole.MENUITEM).last()).hasText("#2 Passed");
+        assertNotEquals(
+                menu.getByRole(AriaRole.MENUITEM)
+                        .first()
+                        .evaluate("element => getComputedStyle(element).backgroundColor"),
+                menu.getByRole(AriaRole.MENUITEM)
+                        .last()
+                        .evaluate("element => getComputedStyle(element).backgroundColor"));
         Page html = p.context()
                 .waitForPage(() -> menu.getByRole(
                                 AriaRole.MENUITEM,
-                                new Locator.GetByRoleOptions().setName("#4").setExact(true))
+                                new Locator.GetByRoleOptions()
+                                        .setName("#4 Passed")
+                                        .setExact(true))
                         .click());
         assertThat(html).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
         assertThat(html.locator("h1")).hasText("Custom report entry");
@@ -130,22 +141,53 @@ public class HtmlReportNavigationIT {
         Page console = p.context()
                 .waitForPage(() -> p.getByRole(
                                 AriaRole.MENUITEM,
-                                new Page.GetByRoleOptions().setName("#3").setExact(true))
+                                new Page.GetByRoleOptions().setName("#3 Passed").setExact(true))
                         .click());
         assertThat(console).hasURL(jobUrl + "3/console");
         console.close();
-        Page shifted = p.context()
-                .waitForPage(
-                        () -> tile.click(new Locator.ClickOptions().setModifiers(List.of(KeyboardModifier.SHIFT))));
-        assertThat(shifted).hasURL(jobUrl + "7/console");
-        assertEquals(
-                p.context().newCDPSession(p).send("Browser.getWindowForTarget").get("windowId"),
-                p.context()
-                        .newCDPSession(shifted)
-                        .send("Browser.getWindowForTarget")
-                        .get("windowId"),
-                "Shift-click must open a tab in the same browser window");
-        shifted.close();
+        tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+        p.keyboard().down("Shift");
+        try {
+            Page shiftedHistory = p.context()
+                    .waitForPage(() -> p.getByRole(
+                                    AriaRole.MENUITEM,
+                                    new Page.GetByRoleOptions()
+                                            .setName("#4 Passed")
+                                            .setExact(true))
+                            .click());
+            assertThat(shiftedHistory).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
+            assertEquals(
+                    p.context()
+                            .newCDPSession(p)
+                            .send("Browser.getWindowForTarget")
+                            .get("windowId"),
+                    p.context()
+                            .newCDPSession(shiftedHistory)
+                            .send("Browser.getWindowForTarget")
+                            .get("windowId"),
+                    "History Shift-click must open a tab while Shift remains held");
+            shiftedHistory.close();
+        } finally {
+            p.keyboard().up("Shift");
+        }
+        p.keyboard().down("Shift");
+        try {
+            Page shifted = p.context().waitForPage(() -> tile.click());
+            assertThat(shifted).hasURL(jobUrl + "7/console");
+            assertEquals(
+                    p.context()
+                            .newCDPSession(p)
+                            .send("Browser.getWindowForTarget")
+                            .get("windowId"),
+                    p.context()
+                            .newCDPSession(shifted)
+                            .send("Browser.getWindowForTarget")
+                            .get("windowId"),
+                    "Shift-click must open a tab while Shift remains held");
+            shifted.close();
+        } finally {
+            p.keyboard().up("Shift");
+        }
         tile.dispatchEvent("pointerdown", Map.of("pointerType", "touch", "clientX", 100, "clientY", 100));
         assertThat(p.getByRole(AriaRole.MENU)).isVisible();
         tile.dispatchEvent("pointerup", Map.of("pointerType", "touch"));

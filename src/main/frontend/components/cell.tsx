@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useUserPreferences } from "../context/user-preference-provider.tsx";
 import { Job } from "../models/job";
+import openInNewTab from "../utils/open-in-new-tab.ts";
 import { buildStatusToClass } from "../utils/utils.ts";
 import BuildHistoryMenu from "./build-history-menu.tsx";
 import Label from "./label";
@@ -91,12 +92,7 @@ function Cell({
           }
           if (event.shiftKey) {
             event.preventDefault();
-            const destination = event.currentTarget.href;
-            // Leave the Shift-click event before Chrome chooses a tab or window.
-            window.setTimeout(
-              () => window.open(destination, "_blank", "noopener"),
-              0,
-            );
+            openInNewTab(event.currentTarget.href);
           }
         }}
         style={job.disabled ? undefined : { opacity: job.resultOpacity }}

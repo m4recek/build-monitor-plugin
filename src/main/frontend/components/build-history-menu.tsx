@@ -3,7 +3,17 @@ import "./build-history-menu.scss";
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { Job } from "../models/job.ts";
+import { Job, JobStatus } from "../models/job.ts";
+import openInNewTab from "../utils/open-in-new-tab.ts";
+
+const resultLabels: Record<JobStatus, string> = {
+  successful: "Passed",
+  failing: "Failed",
+  unstable: "Unstable",
+  aborted: "Aborted",
+  unknown: "Not built",
+  running: "Running",
+};
 
 export default function BuildHistoryMenu({
   name,
@@ -83,17 +93,21 @@ export default function BuildHistoryMenu({
       {builds.map((build) => (
         <a
           role="menuitem"
+          className={`bm-build-history__run bm-build-history__run--${build.status}`}
           key={build.targetUrl}
           href={build.targetUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(event) => {
             event.preventDefault();
-            window.open(event.currentTarget.href, "_blank", "noopener");
+            openInNewTab(event.currentTarget.href);
             onClose();
           }}
         >
-          {build.name}
+          <span>{build.name}</span>{" "}
+          <span className="bm-build-history__result">
+            {resultLabels[build.status]}
+          </span>
         </a>
       ))}
     </div>,

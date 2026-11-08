@@ -81,13 +81,16 @@ public class JobView {
         Run<?, ?> latest = job.getLastBuild();
         Run<?, ?> build = latest == null ? null : latest.getPreviousBuild();
         while (build != null && builds.size() < 5) {
-            builds.add(new PreviousBuild(build.getDisplayName(), targetUrl(build)));
+            builds.add(new PreviousBuild(
+                    build.getDisplayName(),
+                    targetUrl(build),
+                    build.isBuilding() ? "running" : CssStatus.of(build.getResult())));
             build = build.getPreviousBuild();
         }
         return builds;
     }
 
-    public record PreviousBuild(String name, String targetUrl) {}
+    public record PreviousBuild(String name, String targetUrl, String status) {}
 
     private String targetUrl(Run<?, ?> build) throws IOException {
         if (build == null) {

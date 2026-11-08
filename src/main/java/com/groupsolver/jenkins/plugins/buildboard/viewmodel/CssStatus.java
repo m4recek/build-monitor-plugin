@@ -15,14 +15,12 @@ public class CssStatus {
             Result.NOT_BUILT, "unknown",
             Result.ABORTED, "aborted");
 
+    public static String of(Result result) {
+        return result == null ? "unknown" : statuses.getOrDefault(result, "unknown");
+    }
+
     public static String of(final JobView job) {
-        Result result = job.lastResult();
-        String status;
-        if (result == null) {
-            status = "unknown";
-        } else {
-            status = statuses.getOrDefault(result, "unknown");
-        }
+        String status = of(job.lastResult());
 
         if (job.isDisabled()) {
             status = "disabled";
