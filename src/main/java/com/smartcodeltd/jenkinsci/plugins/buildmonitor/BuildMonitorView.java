@@ -160,6 +160,18 @@ public class BuildMonitorView extends ListView {
             title = req.getParameter("title");
             String maxColumns = req.getParameter("maxColumns");
             String textScale = req.getParameter("textScale");
+            String maxRows = req.getParameter("maxRows");
+            if (maxRows == null) {
+                throw new FormException("Rows per screen is required; leave empty for automatic sizing.", "maxRows");
+            }
+
+            try {
+                currentConfig().setMaxRows(maxRows.isBlank() ? null : Integer.valueOf(maxRows));
+            } catch (IllegalArgumentException e) {
+                throw new FormException(e, "maxRows");
+            }
+            currentConfig().setGroupRegex(req.getParameter("groupRegex"));
+            currentConfig().setNameStripRegex(req.getParameter("nameStripRegex"));
 
             currentConfig().setColourBlindMode(json.optBoolean("colourBlindMode", false));
             currentConfig().setShowBadges(json.optBoolean("showBadges", true));

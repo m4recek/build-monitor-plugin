@@ -21,6 +21,9 @@ public class Config implements Describable<Config> {
     private Boolean colourBlindMode;
     private Boolean displayCommitters;
     private Integer maxColumns;
+    private Integer maxRows;
+    private String groupRegex = "";
+    private String nameStripRegex = "";
     private Double textScale;
     private Boolean showBadges;
     private DisplayOptions displayBadges;
@@ -127,7 +130,37 @@ public class Config implements Describable<Config> {
     }
 
     public void setMaxColumns(int maxColumns) {
+        if (maxColumns < 1) {
+            throw new IllegalArgumentException("Columns must be a positive integer.");
+        }
         this.maxColumns = maxColumns;
+    }
+
+    public Integer getMaxRows() {
+        return maxRows;
+    }
+
+    public void setMaxRows(Integer maxRows) {
+        if (maxRows != null && maxRows < 1) {
+            throw new IllegalArgumentException("Rows must be a positive integer, or empty for automatic sizing.");
+        }
+        this.maxRows = maxRows;
+    }
+
+    public String getGroupRegex() {
+        return groupRegex;
+    }
+
+    public void setGroupRegex(String groupRegex) {
+        this.groupRegex = groupRegex;
+    }
+
+    public String getNameStripRegex() {
+        return nameStripRegex;
+    }
+
+    public void setNameStripRegex(String nameStripRegex) {
+        this.nameStripRegex = nameStripRegex;
     }
 
     public double getTextScale() {

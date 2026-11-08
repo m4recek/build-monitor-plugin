@@ -13,7 +13,7 @@
   <version>${changelist}</version>
   <packaging>hpi</packaging>
   <name>Build Monitor View</name>
-  <url>https://github.com/jenkinsci/build-monitor-plugin</url>
+  <url>https://github.com/m4recek/build-monitor-plugin</url>
 
   <licenses>
     <license>
@@ -53,7 +53,7 @@
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.516</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <gitHubRepo>jenkinsci/build-monitor-plugin</gitHubRepo>
+    <gitHubRepo>m4recek/build-monitor-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
     <node.version>24.15.0</node.version>

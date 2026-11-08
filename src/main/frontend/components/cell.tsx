@@ -9,7 +9,13 @@ import Claim from "./snippets/claim.tsx";
 import Problems from "./snippets/problems.tsx";
 import Tests from "./snippets/tests.tsx";
 
-function Cell({ job }: { job: Job }) {
+function Cell({
+  job,
+  nameStripPattern,
+}: {
+  job: Job;
+  nameStripPattern: RegExp | null;
+}) {
   const { colorBlindMode } = useUserPreferences();
 
   return (
@@ -29,7 +35,11 @@ function Cell({ job }: { job: Job }) {
 
       <h2>
         <Label
-          text={job.name}
+          text={
+            nameStripPattern === null
+              ? job.name
+              : job.name.replace(nameStripPattern, "")
+          }
           style={{
             fontSize: "1.25em",
             fontWeight: "550",

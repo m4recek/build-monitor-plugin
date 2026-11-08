@@ -24,6 +24,7 @@ root.render(
           maximumNumberOfColumns: Number(
             rootElement.dataset.appearanceMaximumNumberOfColumns,
           ),
+          maximumNumberOfRows: Number(rootElement.dataset.maxRows),
           colorBlindMode:
             rootElement.dataset.appearanceColorBlindMode === "true",
           showBadges: rootElement.dataset.appearanceShowBadges === "true",
@@ -32,7 +33,10 @@ root.render(
         <JobsProvider
           autoRefreshEvery={Number(rootElement.dataset.autoRefreshEvery)}
         >
-          <Container />
+          <Container
+            groupRegex={rootElement.dataset.groupRegex!}
+            nameStripRegex={rootElement.dataset.nameStripRegex!}
+          />
           <PageDescription
             description={rootElement.dataset.buildMonitorDescription}
           />

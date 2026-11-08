@@ -18,6 +18,8 @@ const OutsideButtonWithDropdown = ({ amountOfJobs }: OptionsButtonProps) => {
     setTextSize,
     maximumNumberOfColumns,
     setMaximumNumberOfColumns,
+    maximumNumberOfRows,
+    setMaximumNumberOfRows,
     colorBlindMode,
     setColorBlindMode,
     showBadges,
@@ -77,6 +79,16 @@ const OutsideButtonWithDropdown = ({ amountOfJobs }: OptionsButtonProps) => {
                   disabled={controlsEnabled || amountOfJobs === 1}
                 />,
                 "separator",
+                <Slider
+                  key={"maximum-number-of-rows"}
+                  label={"Rows per screen (0 = automatic)"}
+                  min={0}
+                  max={20}
+                  value={maximumNumberOfRows}
+                  setValue={(e) => setMaximumNumberOfRows(Number(e.target.value))}
+                  step={1}
+                  disabled={controlsEnabled}
+                />,
                 <div key={"show-badges"} className={"bm-checkboxes"}>
                   <Checkbox
                     label={"Show badges"}

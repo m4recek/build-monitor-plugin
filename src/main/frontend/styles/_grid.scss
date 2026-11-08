@@ -61,8 +61,27 @@
 
 .bm-grid-track {
   display: flex;
-  gap: calc(var(--section-padding) / 2);
   height: 100%;
+}
+
+.bm-grid-row {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.bm-grid-row__group {
+  min-height: 1.5em;
+  font-weight: 600;
+  padding-inline: 0.25em;
+}
+
+.bm-grid-row__jobs {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  gap: calc(var(--section-padding) / 2);
 }
 
 .bm-grid-page {

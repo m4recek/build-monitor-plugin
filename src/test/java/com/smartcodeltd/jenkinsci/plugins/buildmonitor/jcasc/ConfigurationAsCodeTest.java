@@ -41,6 +41,9 @@ class ConfigurationAsCodeTest {
         assertThat(view.getConfig().getDisplayCommitters(), is(false));
         assertThat(view.getConfig().getDisplayJUnitProgress(), is(false));
         assertThat(view.getConfig().getMaxColumns(), is(2));
+        assertThat(view.getConfig().getMaxRows(), is(3));
+        assertThat(view.getConfig().getGroupRegex(), is("_(PROD|DEV)_"));
+        assertThat(view.getConfig().getNameStripRegex(), is("^(?:Tests\\s*(?:»|>>|/)\\s*)?TEST_(?:PROD|DEV)_"));
         assertThat(view.getConfig().getOrder(), isA(ByStatus.class));
         assertThat(view.getConfig().getShowBadges(), is(false));
         assertThat(view.getConfig().getAutoRefreshEvery(), is(10));

@@ -59,6 +59,14 @@
   </f:section>
 
   <f:section title="${%Build Monitor}">
+    <f:entry title="${%Grouping regex}" description="JavaScript regex without delimiters, matched against the original full display name. The first capture gives the group name; without captures, the full match is used. Groups appear in first-seen order. Unmatched jobs appear under Other. Leave empty to disable grouping.">
+      <f:textbox name="groupRegex" value="${it.config.groupRegex}" />
+    </f:entry>
+
+    <f:entry title="${%Strip job name regex}" description="JavaScript regular expression, without delimiters. All matching substrings are removed from tile labels only.">
+      <f:textbox name="nameStripRegex" value="${it.config.nameStripRegex}" />
+    </f:entry>
+
     <f:entry title="${%Title}">
       <f:textbox name="title" value="${it.title}"/>
     </f:entry>
@@ -128,6 +136,10 @@
 
     <f:entry title="${%Maximum number of columns}" field="maxColumns">
       <f:textbox name="maxColumns" value="${it.maxColumns}" />
+    </f:entry>
+
+    <f:entry title="${%Rows per screen}" description="A positive integer sets a fixed grid. Leave empty to size rows automatically for the screen.">
+      <f:number name="maxRows" value="${it.config.maxRows}" min="1" step="1" />
     </f:entry>
 
     <f:entry title="${%Show badges}">

@@ -33,6 +33,26 @@ To create a new Build Monitor View, click on the "New View" tab, select "Build M
 
 Simple, right? :-) You can have as many Build Monitor Views as you want - the most popular approach is to have one per team or one per project.
 
+## Grouped TV boards
+
+This fork adds these configurable settings:
+
+* **Grouping regex**: a JavaScript regular expression without `/` delimiters, matched against the original full display name. Its first capture supplies the group name; if there is no capture, the full match supplies it. Groups appear in first-seen order from the existing job ordering. Unmatched jobs appear in **Other** at the end. Leave empty to disable grouping.
+* **Strip job name regex**: removes every matching substring from tile headings. Job names, URLs, ordering within groups, and build data remain unchanged. Leave empty to show original names.
+* **Rows per screen**: a positive integer fixes the number of rows; columns × rows gives the screen's slot capacity. Leave the view field empty for viewport-based row sizing. The **More actions** menu also provides a rows slider alongside the original column and text-size controls; zero selects automatic sizing. Per-screen row preferences persist and reset to the view's setting.
+
+Each group starts at the first column of a fresh row. A partial group row keeps its remaining slots empty; subsequent groups can use the remaining rows on that screen. Overflow continues on the next screen, repeating the group heading when necessary. Existing swipe/scroll navigation, page buttons, and job refresh timing apply. There is no automatic page rotation.
+
+For `KE_OFFICE_TV_BE`, `_(PROD|DEV)_` derives `PROD` and `DEV` groups. A broader expression such as `^TEST_([^_]+)_` derives any environment name. There is no fixed list of groups or environment-specific ordering. Rows and columns are configurable; four columns and three rows are one possible layout.
+
+Use this stripping expression to display `graphql_logic` for `Tests » TEST_DEV_graphql_logic` (also accepts `>>` and `/` folder separators):
+
+```regex
+^(?:Tests\s*(?:»|>>|/)\s*)?TEST_(?:PROD|DEV)_
+```
+
+Build the Jenkins plugin with `mvn verify`; the installable artifact is `target/build-monitor-plugin.hpi`. Frontend checks are `npm test`, `./node_modules/.bin/eslint src/main/frontend/`, `./node_modules/.bin/tsc --noEmit`, and `npm run build`. On Node 24, run tests with `NODE_OPTIONS=--no-experimental-webstorage npm test` so jsdom provides browser storage.
+
 # A picture is worth a thousand words
 
 ![Adding jobs](docs/empty.png)

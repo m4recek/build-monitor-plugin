@@ -15,7 +15,10 @@
                 data-appearance-maximum-number-of-columns="${it.maxColumns}"
                 data-appearance-color-blind-mode="${it.colourBlindMode}"
                 data-appearance-show-badges="${it.showBadges}"
-                data-auto-refresh-every="${it.autoRefreshEvery}" />
+                data-auto-refresh-every="${it.autoRefreshEvery}"
+                data-max-rows="${it.config.maxRows == null ? 0 : it.config.maxRows}"
+                data-group-regex="${it.config.groupRegex}"
+                data-name-strip-regex="${it.config.nameStripRegex}" />
 
            <script src="${rootURL}/plugin/build-monitor-plugin/js/bundles/app.js" type="module" />
        </l:main-panel>
