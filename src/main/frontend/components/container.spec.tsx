@@ -15,7 +15,7 @@ import Container from "./container.tsx";
 
 beforeEach(() => {
   window.localStorage.clear();
-  document.body.innerHTML = '<header class="jenkins-header__actions"></header>';
+  document.body.innerHTML = '<div class="bm-board-controls"></div>';
   Object.defineProperty(HTMLElement.prototype, "scrollTo", {
     value: vi.fn(),
     configurable: true,
@@ -77,7 +77,7 @@ describe("board controls", () => {
     expect(first.container.querySelectorAll(".bm-grid-page")).toHaveLength(2);
     fireEvent.click(
       document.querySelector(
-        ".jenkins-header__actions button",
+        ".bm-board-controls button",
       ) as HTMLButtonElement,
     );
     fireEvent.change(

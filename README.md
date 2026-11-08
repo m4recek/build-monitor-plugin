@@ -43,6 +43,8 @@ This fork adds these configurable settings:
 
 Each group starts at the first column of a fresh row. A partial group row keeps its remaining slots empty; subsequent groups can use the remaining rows on that screen. Overflow continues on the next screen, repeating the group heading when necessary. Existing swipe/scroll navigation, page buttons, and job refresh timing apply. There is no automatic page rotation.
 
+The board fills the screen without the Jenkins header. Only the rounded settings button remains in its upper-right position, at 95% transparency until hovered, keyboard-focused, or opened.
+
 For `KE_OFFICE_TV_BE`, `_(PROD|DEV)_` derives `PROD` and `DEV` groups. A broader expression such as `^TEST_([^_]+)_` derives any environment name. There is no fixed list of groups or environment-specific ordering. Rows and columns are configurable; four columns and three rows are one possible layout.
 
 Use this stripping expression to display `graphql_logic` for `Tests » TEST_DEV_graphql_logic` (also accepts `>>` and `/` folder separators):

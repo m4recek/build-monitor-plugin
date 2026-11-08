@@ -2,15 +2,10 @@
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
     <l:layout title="${it.displayName}" type="full-screen">
        <l:main-panel>
-           <l:pageHeader title="${null}"
-                         logoAlt="${null}"
-                         searchPlaceholder="${null}"
-                         searchHelpUrl="$null}"
-                         logout="${null}" />
+           <div class="bm-board-controls" />
 
            <div id="app"
                 data-build-monitor-id="${it.displayName.hashCode()}"
-                data-build-monitor-description="${it.description}"
                 data-appearance-text-size="${it.textScale}"
                 data-appearance-maximum-number-of-columns="${it.maxColumns}"
                 data-appearance-color-blind-mode="${it.colourBlindMode}"

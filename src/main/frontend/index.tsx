@@ -3,7 +3,6 @@ import "./app.scss";
 import { createRoot } from "react-dom/client";
 
 import Container from "./components/container";
-import PageDescription from "./components/page-description.tsx";
 import { UseConfirmationProvider } from "./context/confirmation-provider.tsx";
 import { JobsProvider } from "./context/jobs-provider.tsx";
 import { UseNotificationProvider } from "./context/notification-provider.tsx";
@@ -36,9 +35,6 @@ root.render(
           <Container
             groupRegex={rootElement.dataset.groupRegex!}
             nameStripRegex={rootElement.dataset.nameStripRegex!}
-          />
-          <PageDescription
-            description={rootElement.dataset.buildMonitorDescription}
           />
         </JobsProvider>
       </UserPreferencesProvider>
