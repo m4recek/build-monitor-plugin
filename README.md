@@ -45,7 +45,7 @@ The deadline is the first timer occurrence after completion, including Jenkins `
 
 The plugin ID is `groupsolver-build-board`, its Java namespace is `com.groupsolver.jenkins.plugins.buildboard`, and its view type is **GroupSolver Build Board**. It installs alongside the official Build Monitor plugin; existing views, classes, resources, and browser preferences remain separate. Third-party dependency versions are unchanged.
 
-New boards default to text size **0.5**, **6 columns**, and **6 rows**. Existing saved view settings and per-screen preferences remain configurable.
+New boards default to text size **0.5**, **6 columns**, and **6 rows**. Existing saved view settings and per-screen preferences remain configurable. Group labels use 16px text independently of tile text size; tile grid gaps are 6.5px with the standard Jenkins spacing.
 
 This fork adds these configurable settings:
 
