@@ -222,7 +222,7 @@ export default function BuildHistoryMenu({
           </a>
           <a
             role="menuitem"
-            className="bm-build-history__icon"
+            className="bm-build-history__icon bm-build-history__icon--inline"
             href={build.url}
             target="_blank"
             rel="noopener noreferrer"
