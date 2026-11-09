@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { Job } from "../models/job.ts";
 import { createBoardPages } from "../utils/board-layout.ts";
@@ -121,51 +121,74 @@ function PagedGrid({
         onScroll={handleScroll}
       >
         <div className="bm-grid-track">
-          {pages.map((pageRows, pageIndex) => (
-            <section
-              key={`page-${pageIndex}`}
-              className="bm-grid-page"
-              aria-label={`Page ${pageIndex + 1} of ${pages.length}`}
-            >
-              <div
-                className="bm-grid"
-                style={{
-                  fontSize: textSize + "rem",
-                  gridTemplateColumns: "minmax(0, 1fr)",
-                  gridTemplateRows: "minmax(0, 1fr) ".repeat(rowsPerPage),
-                }}
+          {pages.map((pageRows, pageIndex) => {
+            const rowHeadings = pageRows.map(
+              (row, rowIndex) =>
+                row.group !== "" && (row.startsGroup || rowIndex === 0),
+            );
+            const rowTracks = Array.from(
+              { length: rowsPerPage },
+              (_, rowIndex) => {
+                const tileTrack = `[jobs-${rowIndex}] minmax(0, 1fr)`;
+                if (rowHeadings[rowIndex] === true) {
+                  return `[heading-${rowIndex}] max-content ${tileTrack}`;
+                }
+                return tileTrack;
+              },
+            );
+
+            return (
+              <section
+                key={`page-${pageIndex}`}
+                className="bm-grid-page"
+                aria-label={`Page ${pageIndex + 1} of ${pages.length}`}
               >
-                {pageRows.map((row, rowIndex) => (
-                  <section
-                    className="bm-grid-row"
-                    key={row.jobs[0].url}
-                    aria-label={row.group || undefined}
-                  >
-                    {row.group !== "" &&
-                      (row.startsGroup || rowIndex === 0) && (
-                        <div className="bm-grid-row__group">{row.group}</div>
+                <div
+                  className="bm-grid"
+                  style={{
+                    fontSize: textSize + "rem",
+                    gridTemplateColumns: "minmax(0, 1fr)",
+                    gridTemplateRows: rowTracks.join(" var(--bm-grid-gap) "),
+                  }}
+                >
+                  {pageRows.map((row, rowIndex) => (
+                    <Fragment key={row.jobs[0].url}>
+                      {rowHeadings[rowIndex] && (
+                        <div
+                          className="bm-grid-row__group"
+                          style={{ gridRow: `heading-${rowIndex}` }}
+                        >
+                          {row.group}
+                        </div>
                       )}
-                    <div
-                      className="bm-grid-row__jobs"
-                      style={{
-                        gridTemplateColumns: "minmax(0, 1fr) ".repeat(
-                          columnCount,
-                        ),
-                      }}
-                    >
-                      {row.jobs.map((job) => (
-                        <Cell
-                          key={job.url}
-                          job={job}
-                          nameStripPattern={nameStripPattern}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            </section>
-          ))}
+                      <section
+                        className="bm-grid-row"
+                        aria-label={row.group || undefined}
+                        style={{ gridRow: `jobs-${rowIndex}` }}
+                      >
+                        <div
+                          className="bm-grid-row__jobs"
+                          style={{
+                            gridTemplateColumns: "minmax(0, 1fr) ".repeat(
+                              columnCount,
+                            ),
+                          }}
+                        >
+                          {row.jobs.map((job) => (
+                            <Cell
+                              key={job.url}
+                              job={job}
+                              nameStripPattern={nameStripPattern}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    </Fragment>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </div>
       </div>
 
