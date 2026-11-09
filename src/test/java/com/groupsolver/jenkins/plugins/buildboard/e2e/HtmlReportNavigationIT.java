@@ -138,7 +138,17 @@ public class HtmlReportNavigationIT {
         assertThat(menu.locator("[title='Build duration']").first())
                 .hasText(new HumanReadableDuration(job.getBuildByNumber(6).getDuration()).value());
         p.keyboard().press("ArrowUp");
+        assertThat(menu.getByRole(
+                        AriaRole.MENUITEM,
+                        new Locator.GetByRoleOptions().setName("Run").setExact(true)))
+                .isFocused();
+        p.keyboard().press("ArrowUp");
         assertThat(menu.locator(".bm-build-history__heading a")).isFocused();
+        p.keyboard().press("ArrowDown");
+        assertThat(menu.getByRole(
+                        AriaRole.MENUITEM,
+                        new Locator.GetByRoleOptions().setName("Run").setExact(true)))
+                .isFocused();
         p.keyboard().press("ArrowDown");
         assertThat(menu.locator(".bm-build-history__details").first()).isFocused();
         p.keyboard().press("ArrowDown");

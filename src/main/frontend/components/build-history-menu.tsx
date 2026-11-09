@@ -121,52 +121,8 @@ export default function BuildHistoryMenu({
       }}
     >
       <div className="bm-build-history__heading">
-        <span>Previous runs</span>
         <div className="bm-build-history__actions">
-          <button
-            type="button"
-            role="menuitem"
-            className="bm-build-history__run-button"
-            disabled={runUrl === null || runState !== "idle"}
-            title={
-              runUrl === null
-                ? "Job is not buildable or you do not have build permission"
-                : "Queue a new build immediately"
-            }
-            onClick={async () => {
-              if (submitting.current || runUrl === null) {
-                return;
-              }
-              submitting.current = true;
-              setRunState("queuing");
-              setRunError(null);
-              try {
-                const response = await fetch(runUrl, {
-                  method: "POST",
-                  headers: window.crumb.wrap({}),
-                  redirect: "error",
-                });
-                if (response.status !== 201) {
-                  throw new Error(
-                    `Jenkins did not accept the build (HTTP ${response.status}).`,
-                  );
-                }
-                setRunState("queued");
-              } catch (error) {
-                submitting.current = false;
-                setRunState("idle");
-                const message =
-                  error instanceof Error
-                    ? error.message
-                    : "Build request failed.";
-                setRunError(`${message} Check Jenkins before trying again.`);
-              }
-            }}
-          >
-            {runState === "idle" && "Run"}
-            {runState === "queuing" && "Queuing…"}
-            {runState === "queued" && "Queued"}
-          </button>
+          <span>Previous runs</span>
           <a
             role="menuitem"
             className="bm-build-history__icon"
@@ -179,6 +135,50 @@ export default function BuildHistoryMenu({
             {EXTERNAL_LINK_SYMBOL}
           </a>
         </div>
+        <button
+          type="button"
+          role="menuitem"
+          className="bm-build-history__run-button"
+          disabled={runUrl === null || runState !== "idle"}
+          title={
+            runUrl === null
+              ? "Job is not buildable or you do not have build permission"
+              : "Queue a new build immediately"
+          }
+          onClick={async () => {
+            if (submitting.current || runUrl === null) {
+              return;
+            }
+            submitting.current = true;
+            setRunState("queuing");
+            setRunError(null);
+            try {
+              const response = await fetch(runUrl, {
+                method: "POST",
+                headers: window.crumb.wrap({}),
+                redirect: "error",
+              });
+              if (response.status !== 201) {
+                throw new Error(
+                  `Jenkins did not accept the build (HTTP ${response.status}).`,
+                );
+              }
+              setRunState("queued");
+            } catch (error) {
+              submitting.current = false;
+              setRunState("idle");
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Build request failed.";
+              setRunError(`${message} Check Jenkins before trying again.`);
+            }
+          }}
+        >
+          {runState === "idle" && "Run"}
+          {runState === "queuing" && "Queuing…"}
+          {runState === "queued" && "Queued"}
+        </button>
       </div>
       <div role="status" className="bm-build-history__feedback">
         {runState === "queued" && "Build queued"}
