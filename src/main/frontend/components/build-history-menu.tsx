@@ -24,18 +24,25 @@ const resultLabels: Record<JobStatus, string> = {
 export default function BuildHistoryMenu({
   name,
   jobUrl,
+  runUrl,
   builds,
   point,
   onClose,
 }: {
   name: string;
   jobUrl: string;
+  runUrl: string | null;
   builds: Job["previousBuilds"];
   point: { x: number; y: number };
   onClose: (restoreFocus?: boolean) => void;
 }) {
   const menu = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState(point);
+  const submitting = useRef(false);
+  const [runState, setRunState] = useState<"idle" | "queuing" | "queued">(
+    "idle",
+  );
+  const [runError, setRunError] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     const element = menu.current;
@@ -47,6 +54,13 @@ export default function BuildHistoryMenu({
       x: Math.max(8, Math.min(point.x, window.innerWidth - bounds.width - 8)),
       y: Math.max(8, Math.min(point.y, window.innerHeight - bounds.height - 8)),
     });
+  }, [point.x, point.y, runState, runError]);
+
+  useLayoutEffect(() => {
+    const element = menu.current;
+    if (element === null) {
+      return;
+    }
     (
       element.querySelector<HTMLElement>(".bm-build-history__details") ??
       element
@@ -90,10 +104,12 @@ export default function BuildHistoryMenu({
         onClose();
       }}
       onKeyDown={(event) => {
-        const items = Array.from(event.currentTarget.querySelectorAll("a"));
-        const index = items.indexOf(
-          document.activeElement as HTMLAnchorElement,
+        const items = Array.from(
+          event.currentTarget.querySelectorAll<HTMLElement>(
+            "a, button:not(:disabled)",
+          ),
         );
+        const index = items.indexOf(document.activeElement as HTMLElement);
         if (
           items.length > 0 &&
           (event.key === "ArrowDown" || event.key === "ArrowUp")
@@ -106,18 +122,72 @@ export default function BuildHistoryMenu({
     >
       <div className="bm-build-history__heading">
         <span>Previous runs</span>
-        <a
-          role="menuitem"
-          className="bm-build-history__icon"
-          href={jobUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Open job page for ${name}`}
-          title="Open job page"
-        >
-          {EXTERNAL_LINK_SYMBOL}
-        </a>
+        <div className="bm-build-history__actions">
+          <button
+            type="button"
+            role="menuitem"
+            className="bm-build-history__run-button"
+            disabled={runUrl === null || runState !== "idle"}
+            title={
+              runUrl === null
+                ? "Job is not buildable or you do not have build permission"
+                : "Queue a new build immediately"
+            }
+            onClick={async () => {
+              if (submitting.current || runUrl === null) {
+                return;
+              }
+              submitting.current = true;
+              setRunState("queuing");
+              setRunError(null);
+              try {
+                const response = await fetch(runUrl, {
+                  method: "POST",
+                  headers: window.crumb.wrap({}),
+                  redirect: "error",
+                });
+                if (response.status !== 201) {
+                  throw new Error(
+                    `Jenkins did not accept the build (HTTP ${response.status}).`,
+                  );
+                }
+                setRunState("queued");
+              } catch (error) {
+                submitting.current = false;
+                setRunState("idle");
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "Build request failed.";
+                setRunError(`${message} Check Jenkins before trying again.`);
+              }
+            }}
+          >
+            {runState === "idle" && "Run"}
+            {runState === "queuing" && "Queuing…"}
+            {runState === "queued" && "Queued"}
+          </button>
+          <a
+            role="menuitem"
+            className="bm-build-history__icon"
+            href={jobUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open job page for ${name}`}
+            title="Open job page"
+          >
+            {EXTERNAL_LINK_SYMBOL}
+          </a>
+        </div>
       </div>
+      <div role="status" className="bm-build-history__feedback">
+        {runState === "queued" && "Build queued"}
+      </div>
+      {runError !== null && (
+        <div role="alert" className="bm-build-history__error">
+          {runError}
+        </div>
+      )}
       {builds.length === 0 && (
         <div role="menuitem" aria-disabled="true">
           No previous runs

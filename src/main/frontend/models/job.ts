@@ -2,6 +2,7 @@ export interface Job {
   name: string;
   url: string;
   targetUrl: string;
+  runUrl: string | null;
   previousBuilds: {
     name: string;
     url: string;

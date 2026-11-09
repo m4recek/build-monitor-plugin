@@ -10,6 +10,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -17,7 +18,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.groupsolver.jenkins.plugins.buildboard.facade.RelativeLocation;
+import hudson.model.FreeStyleProject;
+import hudson.model.Item;
 import hudson.model.Result;
+import java.util.Date;
 import java.util.List;
 import jenkins.model.Jenkins;
 import org.junit.jupiter.api.AfterEach;
@@ -77,6 +81,23 @@ class JobViewTest {
 
         assertThat(view.url(), is(expectedUrl));
         verify(relativeLocation, times(1)).url();
+    }
+
+    @Test
+    void run_action_uses_zero_delay_and_respects_parameters_buildability_and_permission() {
+        FreeStyleProject project = mock(FreeStyleProject.class);
+        when(relativeLocation.url()).thenReturn("job/Tests/job/example/");
+        when(project.isBuildable()).thenReturn(true);
+        when(project.hasPermission(Item.BUILD)).thenReturn(true);
+        view = new JobView(project, List.of(), false, relativeLocation, new Date());
+        assertThat(view.runUrl(), is("job/Tests/job/example/build?delay=0sec"));
+        when(project.isParameterized()).thenReturn(true);
+        assertThat(view.runUrl(), is("job/Tests/job/example/buildWithParameters?delay=0sec"));
+        when(project.hasPermission(Item.BUILD)).thenReturn(false);
+        assertNull(view.runUrl());
+        when(project.hasPermission(Item.BUILD)).thenReturn(true);
+        when(project.isBuildable()).thenReturn(false);
+        assertNull(view.runUrl());
     }
 
     /*

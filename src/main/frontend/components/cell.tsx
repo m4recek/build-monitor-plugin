@@ -147,6 +147,7 @@ function Cell({
         <BuildHistoryMenu
           name={name}
           jobUrl={job.url}
+          runUrl={job.runUrl}
           builds={job.previousBuilds}
           point={menuPoint}
           onClose={closeMenu}

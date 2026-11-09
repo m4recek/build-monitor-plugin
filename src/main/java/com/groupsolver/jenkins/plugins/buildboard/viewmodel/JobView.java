@@ -8,6 +8,7 @@ import com.groupsolver.jenkins.plugins.buildboard.viewmodel.features.Feature;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Action;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -21,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import jenkins.model.ParameterizedJobMixIn;
 
 /**
  * @author Jan Molak
@@ -75,6 +77,16 @@ public class JobView {
 
     public String targetUrl() throws IOException {
         return targetUrl(job.getLastBuild());
+    }
+
+    public String runUrl() {
+        if (job instanceof ParameterizedJobMixIn.ParameterizedJob<?, ?> buildable) {
+            if (buildable.isBuildable() && job.hasPermission(Item.BUILD)) {
+                String action = buildable.isParameterized() ? "buildWithParameters" : "build";
+                return url().replaceAll("/+$", "") + "/" + action + "?delay=0sec";
+            }
+        }
+        return null;
     }
 
     public List<PreviousBuild> previousBuilds() throws IOException {

@@ -23,6 +23,40 @@
     font-size: 0.85rem;
   }
 
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  button.bm-build-history__run-button {
+    border: 1px solid color-mix(in srgb, var(--text-color) 25%, transparent);
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+    padding: 0.4rem 0.7rem;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__feedback:not(:empty),
+  &__error {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  &__feedback {
+    color: var(--success-color);
+  }
+
+  &__error {
+    color: var(--destructive-color);
+  }
+
   &__run {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;

@@ -123,7 +123,11 @@ public class HtmlReportNavigationIT {
         var tile = p.locator(".bm-cell");
         tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
         var menu = p.getByRole(AriaRole.MENU);
-        assertThat(menu.getByRole(AriaRole.MENUITEM)).hasCount(11);
+        assertThat(menu.getByRole(AriaRole.MENUITEM)).hasCount(12);
+        assertThat(menu.getByRole(
+                        AriaRole.MENUITEM,
+                        new Locator.GetByRoleOptions().setName("Run").setExact(true)))
+                .isEnabled();
         assertThat(menu.locator(".bm-build-history__details").first()).hasAttribute("aria-label", "#6 Failed");
         assertThat(menu.locator(".bm-build-history__details").last()).hasAttribute("aria-label", "#2 Passed");
         assertThat(menu.locator("time")).hasCount(5);

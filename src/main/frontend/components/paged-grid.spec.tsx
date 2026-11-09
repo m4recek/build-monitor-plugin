@@ -31,6 +31,7 @@ const makeJob = (name: string): Job => ({
   url: `/job/${name}/`,
   targetUrl: `/job/${name}/1/console`,
   previousBuilds: [],
+  runUrl: `/job/${name}/build?delay=0sec`,
   status: "successful",
   disabled: false,
   hashCode: 1,
@@ -72,6 +73,78 @@ const board = (jobs: Job[]) => (
 );
 
 describe("paged board", () => {
+  it("queues one immediate run with the Jenkins crumb and shows accepted feedback", async () => {
+    const job = makeJob("TEST_PROD_run");
+    const request = vi.fn().mockResolvedValue({ status: 201 });
+    const originalCrumb = window.crumb;
+    window.crumb = { wrap: () => ({ JenkinsCrumb: "test-crumb" }) };
+    vi.stubGlobal("fetch", request);
+    try {
+      const { container } = render(board([job]));
+      fireEvent.contextMenu(
+        container.querySelector("a.bm-cell") as HTMLElement,
+      );
+      const run = screen.getByRole("menuitem", { name: "Run" });
+      fireEvent.click(run);
+      fireEvent.click(run);
+      expect(request).toHaveBeenCalledExactlyOnceWith(job.runUrl, {
+        method: "POST",
+        headers: { JenkinsCrumb: "test-crumb" },
+        redirect: "error",
+      });
+      expect(screen.getByRole("menuitem", { name: "Queuing…" })).toBeDisabled();
+      expect(
+        await screen.findByRole("menuitem", { name: "Queued" }),
+      ).toBeDisabled();
+      expect(screen.getByRole("status")).toHaveTextContent("Build queued");
+      expect(screen.getByRole("menu")).toBeVisible();
+    } finally {
+      window.crumb = originalCrumb;
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("reports a rejected build request without claiming that it was queued", async () => {
+    const job = makeJob("TEST_PROD_run");
+    job.runUrl = `${job.url}buildWithParameters?delay=0sec`;
+    const request = vi.fn().mockResolvedValue({ status: 403 });
+    const originalCrumb = window.crumb;
+    window.crumb = { wrap: () => ({}) };
+    vi.stubGlobal("fetch", request);
+    try {
+      const { container } = render(board([job]));
+      fireEvent.contextMenu(
+        container.querySelector("a.bm-cell") as HTMLElement,
+      );
+      fireEvent.click(
+        screen.getByRole("menuitem", { name: "Run" }),
+      );
+      expect(await screen.findByRole("alert")).toHaveTextContent("HTTP 403");
+      expect(request).toHaveBeenCalledWith(
+        job.runUrl,
+        expect.objectContaining({ method: "POST" }),
+      );
+      expect(
+        screen.getByRole("menuitem", { name: "Run" }),
+      ).toBeEnabled();
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+      expect(request).toHaveBeenCalledOnce();
+    } finally {
+      window.crumb = originalCrumb;
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("keeps Run disabled when Jenkins does not provide a build action", () => {
+    const job = makeJob("TEST_PROD_disabled");
+    job.runUrl = null;
+    const { container } = render(board([job]));
+    fireEvent.contextMenu(container.querySelector("a.bm-cell") as HTMLElement);
+    expect(
+      screen.getByRole("menuitem", { name: "Run" }),
+    ).toBeDisabled();
+  });
+
   it("strips labels while preserving URLs, source names, group rows and partial-row slots", () => {
     const input = [
       makeJob("Tests » TEST_PROD_graphql_logic"),
@@ -147,7 +220,7 @@ describe("paged board", () => {
     const tile = container.querySelector("a.bm-cell") as HTMLElement;
     fireEvent.contextMenu(tile, { clientX: 100, clientY: 100 });
     expect(screen.getByRole("menu")).toBeVisible();
-    expect(screen.getAllByRole("menuitem")).toHaveLength(11);
+    expect(screen.getAllByRole("menuitem")).toHaveLength(12);
     expect(
       screen.getByRole("menuitem", {
         name: "Open job page for TEST_PROD_history",
