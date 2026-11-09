@@ -180,9 +180,6 @@ export default function BuildHistoryMenu({
           {runState === "queued" && "Queued"}
         </button>
       </div>
-      <div role="status" className="bm-build-history__feedback">
-        {runState === "queued" && "Build queued"}
-      </div>
       {runError !== null && (
         <div role="alert" className="bm-build-history__error">
           {runError}

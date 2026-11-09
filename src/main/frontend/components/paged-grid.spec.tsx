@@ -96,7 +96,7 @@ describe("paged board", () => {
       expect(
         await screen.findByRole("menuitem", { name: "Queued" }),
       ).toBeDisabled();
-      expect(screen.getByRole("status")).toHaveTextContent("Build queued");
+      expect(screen.queryByRole("status")).toBeNull();
       expect(screen.getByRole("menu")).toBeVisible();
     } finally {
       window.crumb = originalCrumb;
@@ -127,7 +127,7 @@ describe("paged board", () => {
       expect(
         screen.getByRole("menuitem", { name: "Run" }),
       ).toBeEnabled();
-      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+      expect(screen.queryByRole("status")).toBeNull();
       expect(request).toHaveBeenCalledOnce();
     } finally {
       window.crumb = originalCrumb;

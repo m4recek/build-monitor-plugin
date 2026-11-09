@@ -44,17 +44,9 @@
     }
   }
 
-  &__feedback:not(:empty),
   &__error {
     padding: 0.3rem 0.75rem;
     font-size: 0.8rem;
-  }
-
-  &__feedback {
-    color: var(--success-color);
-  }
-
-  &__error {
     color: var(--destructive-color);
   }
 
