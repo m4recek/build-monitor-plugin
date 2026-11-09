@@ -84,13 +84,19 @@ function Cell({
         onPointerUp={cancelHold}
         onPointerCancel={cancelHold}
         href={job.targetUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         onClick={(event) => {
           if (held.current) {
             event.preventDefault();
             held.current = false;
             return;
           }
-          if (event.shiftKey) {
+          if (
+            event.shiftKey &&
+            event.metaKey === false &&
+            event.ctrlKey === false
+          ) {
             event.preventDefault();
             openInNewTab(event.currentTarget.href);
           }
@@ -140,6 +146,7 @@ function Cell({
       {menuPoint !== null && (
         <BuildHistoryMenu
           name={name}
+          jobUrl={job.url}
           builds={job.previousBuilds}
           point={menuPoint}
           onClose={closeMenu}

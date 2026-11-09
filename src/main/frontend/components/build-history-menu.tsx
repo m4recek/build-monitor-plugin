@@ -5,6 +5,12 @@ import { createPortal } from "react-dom";
 
 import { Job, JobStatus } from "../models/job.ts";
 import openInNewTab from "../utils/open-in-new-tab.ts";
+import { EXTERNAL_LINK_SYMBOL } from "../utils/symbols.tsx";
+
+const buildTimeFormat = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
 
 const resultLabels: Record<JobStatus, string> = {
   successful: "Passed",
@@ -17,11 +23,13 @@ const resultLabels: Record<JobStatus, string> = {
 
 export default function BuildHistoryMenu({
   name,
+  jobUrl,
   builds,
   point,
   onClose,
 }: {
   name: string;
+  jobUrl: string;
   builds: Job["previousBuilds"];
   point: { x: number; y: number };
   onClose: (restoreFocus?: boolean) => void;
@@ -39,7 +47,10 @@ export default function BuildHistoryMenu({
       x: Math.max(8, Math.min(point.x, window.innerWidth - bounds.width - 8)),
       y: Math.max(8, Math.min(point.y, window.innerHeight - bounds.height - 8)),
     });
-    (element.querySelector<HTMLElement>("a") ?? element).focus();
+    (
+      element.querySelector<HTMLElement>(".bm-build-history__details") ??
+      element
+    ).focus();
     const outside = (event: PointerEvent) => {
       if (element.contains(event.target as Node) === false) {
         onClose();
@@ -69,6 +80,15 @@ export default function BuildHistoryMenu({
       tabIndex={-1}
       className="bm-build-history"
       style={{ left: position.x, top: position.y }}
+      onClick={(event) => {
+        const link = (event.target as Element).closest<HTMLAnchorElement>("a");
+        if (link === null || event.metaKey || event.ctrlKey) {
+          return;
+        }
+        event.preventDefault();
+        openInNewTab(link.href);
+        onClose();
+      }}
       onKeyDown={(event) => {
         const items = Array.from(event.currentTarget.querySelectorAll("a"));
         const index = items.indexOf(
@@ -84,34 +104,64 @@ export default function BuildHistoryMenu({
         }
       }}
     >
-      <div className="bm-build-history__heading">Previous runs</div>
+      <div className="bm-build-history__heading">
+        <span>Previous runs</span>
+        <a
+          role="menuitem"
+          className="bm-build-history__icon"
+          href={jobUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Open job page for ${name}`}
+          title="Open job page"
+        >
+          {EXTERNAL_LINK_SYMBOL}
+        </a>
+      </div>
       {builds.length === 0 && (
         <div role="menuitem" aria-disabled="true">
           No previous runs
         </div>
       )}
       {builds.map((build) => (
-        <a
-          role="menuitem"
+        <div
+          role="none"
           className={`bm-build-history__run bm-build-history__run--${build.status}`}
           key={build.targetUrl}
-          href={build.targetUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(event) => {
-            if (event.metaKey || event.ctrlKey) {
-              return;
-            }
-            event.preventDefault();
-            openInNewTab(event.currentTarget.href);
-            onClose();
-          }}
         >
-          <span>{build.name}</span>{" "}
-          <span className="bm-build-history__result">
-            {resultLabels[build.status]}
-          </span>
-        </a>
+          <a
+            role="menuitem"
+            className="bm-build-history__details"
+            href={build.targetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${build.name} ${resultLabels[build.status]}`}
+          >
+            <span className="bm-build-history__summary">
+              <span>{build.name}</span>
+              <span className="bm-build-history__result">
+                {resultLabels[build.status]}
+              </span>
+            </span>
+            <span className="bm-build-history__timing">
+              <time dateTime={new Date(build.startedAt).toISOString()}>
+                {buildTimeFormat.format(build.startedAt)}
+              </time>
+              <span title="Build duration">{build.duration}</span>
+            </span>
+          </a>
+          <a
+            role="menuitem"
+            className="bm-build-history__icon"
+            href={build.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open build ${build.name} page`}
+            title={`Open build ${build.name} page`}
+          >
+            {EXTERNAL_LINK_SYMBOL}
+          </a>
+        </div>
       ))}
     </div>,
     document.body,

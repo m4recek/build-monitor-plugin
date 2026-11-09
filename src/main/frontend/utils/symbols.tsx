@@ -1,3 +1,20 @@
+export const EXTERNAL_LINK_SYMBOL = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    focusable="false"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M14 3h7v7m0-7L10 14" />
+    <path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
+  </svg>
+);
+
 export const BUILD_MONITOR_SYMBOL = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <rect

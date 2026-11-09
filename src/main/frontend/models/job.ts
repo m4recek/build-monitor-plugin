@@ -2,7 +2,14 @@ export interface Job {
   name: string;
   url: string;
   targetUrl: string;
-  previousBuilds: { name: string; targetUrl: string; status: JobStatus }[];
+  previousBuilds: {
+    name: string;
+    url: string;
+    targetUrl: string;
+    status: JobStatus;
+    startedAt: number;
+    duration: string;
+  }[];
   status: JobStatus;
   disabled: boolean;
   hashCode: number;

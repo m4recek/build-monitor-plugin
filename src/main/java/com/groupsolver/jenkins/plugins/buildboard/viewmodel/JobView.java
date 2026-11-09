@@ -3,6 +3,7 @@ package com.groupsolver.jenkins.plugins.buildboard.viewmodel;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.groupsolver.jenkins.plugins.buildboard.facade.RelativeLocation;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.duration.Duration;
+import com.groupsolver.jenkins.plugins.buildboard.viewmodel.duration.HumanReadableDuration;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.features.Feature;
 import hudson.FilePath;
 import hudson.Util;
@@ -83,21 +84,33 @@ public class JobView {
         while (build != null && builds.size() < 5) {
             builds.add(new PreviousBuild(
                     build.getDisplayName(),
+                    buildUrl(build),
                     targetUrl(build),
-                    build.isBuilding() ? "running" : CssStatus.of(build.getResult())));
+                    build.isBuilding() ? "running" : CssStatus.of(build.getResult()),
+                    build.getStartTimeInMillis(),
+                    new HumanReadableDuration(
+                                    build.isBuilding()
+                                            ? Math.max(0, systemTime.getTime() - build.getStartTimeInMillis())
+                                            : build.getDuration())
+                            .value()));
             build = build.getPreviousBuild();
         }
         return builds;
     }
 
-    public record PreviousBuild(String name, String targetUrl, String status) {}
+    public record PreviousBuild(
+            String name, String url, String targetUrl, String status, long startedAt, String duration) {}
+
+    private String buildUrl(Run<?, ?> build) {
+        return url().replaceAll("/+$", "") + "/" + build.getNumber() + "/";
+    }
 
     private String targetUrl(Run<?, ?> build) throws IOException {
         if (build == null) {
             return url();
         }
 
-        String buildUrl = url().replaceAll("/+$", "") + "/" + build.getNumber() + "/";
+        String buildUrl = buildUrl(build);
         for (Action action : build.getAllActions()) {
             if (action.getClass().getName().equals("htmlpublisher.HtmlPublisherTarget$HTMLBuildAction")
                     && action.getDisplayName() != null) {

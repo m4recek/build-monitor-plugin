@@ -92,6 +92,10 @@ describe("paged board", () => {
       input[0].targetUrl,
     );
     expect(container.querySelectorAll(".bm-cell a")).toHaveLength(0);
+    for (const tile of container.querySelectorAll("a.bm-cell")) {
+      expect(tile).toHaveAttribute("target", "_blank");
+      expect(tile).toHaveAttribute("rel", "noopener noreferrer");
+    }
     expect(input[0].url).toBe("/job/Tests » TEST_PROD_graphql_logic/");
     expect(input[0].name).toBe("Tests » TEST_PROD_graphql_logic");
     expect(container.querySelectorAll(".bm-grid-row")).toHaveLength(2);
@@ -134,18 +138,37 @@ describe("paged board", () => {
       name: `#${6 - index}`,
       status: index === 1 ? "failing" : "successful",
       targetUrl: `${job.url}${6 - index}/HTML_20Report/index.html`,
+      url: `${job.url}${6 - index}/`,
+      startedAt: Date.UTC(2026, 10, 9, 8, index),
+      duration: "2m 30s",
     }));
     const open = vi.spyOn(window, "open").mockReturnValue(null);
     const { container } = render(board([job]));
     const tile = container.querySelector("a.bm-cell") as HTMLElement;
     fireEvent.contextMenu(tile, { clientX: 100, clientY: 100 });
     expect(screen.getByRole("menu")).toBeVisible();
-    expect(screen.getAllByRole("menuitem")).toHaveLength(5);
-    expect(screen.getByRole("menuitem", { name: "#5 Failed" })).toHaveClass(
-      "bm-build-history__run--failing",
+    expect(screen.getAllByRole("menuitem")).toHaveLength(11);
+    expect(
+      screen.getByRole("menuitem", {
+        name: "Open job page for TEST_PROD_history",
+      }),
+    ).toHaveAttribute("href", job.url);
+    expect(
+      screen.getByRole("menuitem", { name: "Open build #4 page" }),
+    ).toHaveAttribute("href", job.previousBuilds[2].url);
+    expect(screen.getAllByTitle("Build duration")).toHaveLength(5);
+    expect(screen.getAllByText("2m 30s")).toHaveLength(5);
+    expect(screen.getByRole("menu").querySelector("time")).toHaveAttribute(
+      "datetime",
+      new Date(job.previousBuilds[0].startedAt).toISOString(),
     );
+    expect(
+      screen.getByRole("menuitem", { name: "#5 Failed" }).parentElement,
+    ).toHaveClass("bm-build-history__run--failing");
     const previous = screen.getByRole("menuitem", { name: "#4 Passed" });
-    expect(previous).toHaveClass("bm-build-history__run--successful");
+    expect(previous.parentElement).toHaveClass(
+      "bm-build-history__run--successful",
+    );
     expect(previous).toHaveAttribute("target", "_blank");
     fireEvent.click(previous, { shiftKey: true });
     act(() => vi.runOnlyPendingTimers());
@@ -166,7 +189,14 @@ describe("paged board", () => {
   it("preserves native Command and Control-click navigation in history", () => {
     const job = makeJob("TEST_PROD_history");
     job.previousBuilds = [
-      { name: "#4", targetUrl: `${job.url}4/console`, status: "failing" },
+      {
+        name: "#4",
+        url: `${job.url}4/`,
+        targetUrl: `${job.url}4/console`,
+        status: "failing",
+        startedAt: Date.UTC(2026, 10, 9, 8),
+        duration: "30s",
+      },
     ];
     const open = vi.spyOn(window, "open").mockReturnValue(null);
     const { container } = render(board([job]));
@@ -180,6 +210,20 @@ describe("paged board", () => {
       });
       document.addEventListener("click", nativeNavigation, { once: true });
       fireEvent.click(previous, modifiers);
+      expect(nativeNavigation).toHaveBeenCalledOnce();
+    }
+    for (const item of [
+      screen.getByRole("menuitem", { name: "Open build #4 page" }),
+      screen.getByRole("menuitem", {
+        name: "Open job page for TEST_PROD_history",
+      }),
+    ]) {
+      const nativeNavigation = vi.fn((event: MouseEvent) => {
+        expect(event.defaultPrevented).toBe(false);
+        event.preventDefault();
+      });
+      document.addEventListener("click", nativeNavigation, { once: true });
+      fireEvent.click(item, { metaKey: true });
       expect(nativeNavigation).toHaveBeenCalledOnce();
     }
     expect(open).not.toHaveBeenCalled();

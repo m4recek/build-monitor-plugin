@@ -4,9 +4,11 @@ import static com.groupsolver.jenkins.plugins.buildboard.e2e.utils.BuildBoardVie
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.groupsolver.jenkins.plugins.buildboard.e2e.pages.BuildBoardViewPage;
+import com.groupsolver.jenkins.plugins.buildboard.viewmodel.duration.HumanReadableDuration;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.junit.Options;
@@ -18,6 +20,7 @@ import com.microsoft.playwright.options.MouseButton;
 import hudson.FilePath;
 import hudson.model.Result;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -48,8 +51,10 @@ public class HtmlReportNavigationIT {
         String jobUrl = j.getURL() + "view/Navigation/" + job.getUrl();
 
         board.goTo().hasJobsCount(1);
-        p.locator(".bm-cell").click();
-        assertThat(p).hasURL(jobUrl);
+        Page neverBuilt = p.context().waitForPage(() -> p.locator(".bm-cell").click());
+        assertThat(neverBuilt).hasURL(jobUrl);
+        assertThat(p).hasURL(view.get().getAbsoluteUrl());
+        neverBuilt.close();
 
         String publishReport = """
                 node {
@@ -62,18 +67,23 @@ public class HtmlReportNavigationIT {
         j.buildAndAssertSuccess(job);
         board.goTo().hasJobsCount(1);
         assertThat(p.locator(".bm-cell a")).hasCount(0);
-        p.locator(".bm-cell")
-                .getByText("#1", new com.microsoft.playwright.Locator.GetByTextOptions().setExact(true))
-                .click();
-        assertThat(p).hasURL(jobUrl + "1/HTML_20Report/index.html");
-        assertThat(p.locator("h1")).hasText("Latest HTML result");
+        Page firstReport = p.context()
+                .waitForPage(() -> p.locator(".bm-cell")
+                        .getByText("#1", new Locator.GetByTextOptions().setExact(true))
+                        .click());
+        assertThat(firstReport).hasURL(jobUrl + "1/HTML_20Report/index.html");
+        assertThat(firstReport.locator("h1")).hasText("Latest HTML result");
+        assertThat(p).hasURL(view.get().getAbsoluteUrl());
+        firstReport.close();
 
         job.setDefinition(new CpsFlowDefinition("echo 'No report for this run'", true));
         j.buildAndAssertSuccess(job);
         board.goTo().hasJobsCount(1);
-        p.locator(".bm-cell").click();
-        assertThat(p).hasURL(jobUrl + "2/console");
-        assertThat(p.locator(".console-output")).containsText("No report for this run");
+        Page secondConsole = p.context().waitForPage(() -> p.locator(".bm-cell").click());
+        assertThat(secondConsole).hasURL(jobUrl + "2/console");
+        assertThat(secondConsole.locator(".console-output")).containsText("No report for this run");
+        assertThat(p).hasURL(view.get().getAbsoluteUrl());
+        secondConsole.close();
 
         job.setDefinition(new CpsFlowDefinition(publishReport, true));
         var latest = j.buildAndAssertSuccess(job);
@@ -85,8 +95,9 @@ public class HtmlReportNavigationIT {
                         .toFile())
                 .delete();
         board.goTo().hasJobsCount(1);
-        p.locator(".bm-cell").click();
-        assertThat(p).hasURL(jobUrl + "3/console");
+        Page missingReport = p.context().waitForPage(() -> p.locator(".bm-cell").click());
+        assertThat(missingReport).hasURL(jobUrl + "3/console");
+        missingReport.close();
 
         job.setDefinition(new CpsFlowDefinition("""
                 node {
@@ -97,9 +108,10 @@ public class HtmlReportNavigationIT {
                 """, true));
         j.buildAndAssertSuccess(job);
         board.goTo().hasJobsCount(1);
-        p.locator(".bm-cell").click();
-        assertThat(p).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
-        assertThat(p.locator("h1")).hasText("Custom report entry");
+        Page customReport = p.context().waitForPage(() -> p.locator(".bm-cell").click());
+        assertThat(customReport).hasURL(jobUrl + "4/HTML_20Report/details/test%20result.html");
+        assertThat(customReport.locator("h1")).hasText("Custom report entry");
+        customReport.close();
 
         job.setDefinition(new CpsFlowDefinition("echo 'Recent console run'", true));
         j.buildAndAssertSuccess(job);
@@ -111,14 +123,32 @@ public class HtmlReportNavigationIT {
         var tile = p.locator(".bm-cell");
         tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
         var menu = p.getByRole(AriaRole.MENU);
-        assertThat(menu.getByRole(AriaRole.MENUITEM)).hasCount(5);
-        assertThat(menu.getByRole(AriaRole.MENUITEM).first()).hasText("#6 Failed");
-        assertThat(menu.getByRole(AriaRole.MENUITEM).last()).hasText("#2 Passed");
+        assertThat(menu.getByRole(AriaRole.MENUITEM)).hasCount(11);
+        assertThat(menu.locator(".bm-build-history__details").first()).hasAttribute("aria-label", "#6 Failed");
+        assertThat(menu.locator(".bm-build-history__details").last()).hasAttribute("aria-label", "#2 Passed");
+        assertThat(menu.locator("time")).hasCount(5);
+        assertEquals(
+                job.getBuildByNumber(6).getStartTimeInMillis(),
+                Instant.parse(menu.locator("time").first().getAttribute("datetime"))
+                        .toEpochMilli());
+        assertThat(menu.locator("[title='Build duration']").first())
+                .hasText(new HumanReadableDuration(job.getBuildByNumber(6).getDuration()).value());
+        p.keyboard().press("ArrowUp");
+        assertThat(menu.locator(".bm-build-history__heading a")).isFocused();
+        p.keyboard().press("ArrowDown");
+        assertThat(menu.locator(".bm-build-history__details").first()).isFocused();
+        p.keyboard().press("ArrowDown");
+        assertThat(menu.getByRole(
+                        AriaRole.MENUITEM,
+                        new Locator.GetByRoleOptions()
+                                .setName("Open build #6 page")
+                                .setExact(true)))
+                .isFocused();
         assertNotEquals(
-                menu.getByRole(AriaRole.MENUITEM)
+                menu.locator(".bm-build-history__run")
                         .first()
                         .evaluate("element => getComputedStyle(element).backgroundColor"),
-                menu.getByRole(AriaRole.MENUITEM)
+                menu.locator(".bm-build-history__run")
                         .last()
                         .evaluate("element => getComputedStyle(element).backgroundColor"));
         Page html = p.context()
@@ -139,6 +169,22 @@ public class HtmlReportNavigationIT {
                 "History links must open a tab in the same browser window");
         html.close();
         assertThat(menu).hasCount(0);
+        tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+        Page buildPage = p.context()
+                .waitForPage(() -> menu.getByRole(
+                                AriaRole.MENUITEM,
+                                new Locator.GetByRoleOptions()
+                                        .setName("Open build #4 page")
+                                        .setExact(true))
+                        .click());
+        assertThat(buildPage).hasURL(jobUrl + "4/");
+        assertThat(p).hasURL(view.get().getAbsoluteUrl());
+        buildPage.close();
+        tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+        Page jobPage = p.context()
+                .waitForPage(() -> menu.locator(".bm-build-history__heading a").click());
+        assertThat(jobPage).hasURL(jobUrl);
+        jobPage.close();
         tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
         Page console = p.context()
                 .waitForPage(() -> p.getByRole(
@@ -216,5 +262,11 @@ public class HtmlReportNavigationIT {
         assertThat(p).hasURL(view.get().getAbsoluteUrl());
         p.keyboard().press("Escape");
         assertThat(p.getByRole(AriaRole.MENU)).hasCount(0);
+        p.setViewportSize(320, 640);
+        tile.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+        var bounds = menu.boundingBox();
+        assertTrue(bounds.x >= 0 && bounds.x + bounds.width <= 320);
+        assertTrue(bounds.y >= 0 && bounds.y + bounds.height <= 640);
+        assertTrue((Boolean) menu.evaluate("element => element.scrollWidth <= element.clientWidth"));
     }
 }
