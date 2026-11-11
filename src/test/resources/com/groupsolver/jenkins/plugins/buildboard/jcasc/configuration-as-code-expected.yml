@@ -1,0 +1,17 @@
+- buildBoard:
+    config:
+      autoRefreshEvery: 10
+      colourBlindMode: true
+      displayBadgesFrom: "getLastBuild"
+      displayCommitters: false
+      displayJUnitProgress: false
+      groupRegex: "_(PROD|DEV)_"
+      maxColumns: 2
+      maxRows: 3
+      nameStripRegex: "^(?:Tests\\s*(?:»|>>|/)\\s*)?TEST_(?:PROD|DEV)_"
+      order: "byStatus"
+      showBadges: false
+    includeRegex: ".+\\/(my-job-.*)\\/(master|demo)"
+    name: "My-Monitor"
+    recurse: true
+    title: "My Monitor"

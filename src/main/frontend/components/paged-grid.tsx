@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { Job } from "../models/job.ts";
-import {
-  getColumnCount,
-  getRowsPerPage,
-  paginateItems,
-} from "../utils/grid-pagination.ts";
+import { createBoardPages } from "../utils/board-layout.ts";
+import { getColumnCount, getRowsPerPage } from "../utils/grid-pagination.ts";
 import Cell from "./cell.tsx";
 
 const getInitialViewportHeight = () =>
@@ -17,9 +14,19 @@ interface PagedGridProps {
   jobs: Job[];
   textSize: number;
   maximumNumberOfColumns: number;
+  maxRows: number | null;
+  groupPattern: RegExp | null;
+  nameStripPattern: RegExp | null;
 }
 
-function PagedGrid({ jobs, textSize, maximumNumberOfColumns }: PagedGridProps) {
+function PagedGrid({
+  jobs,
+  textSize,
+  maximumNumberOfColumns,
+  maxRows,
+  groupPattern,
+  nameStripPattern,
+}: PagedGridProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewportHeight, setViewportHeight] = useState(
     getInitialViewportHeight,
@@ -27,16 +34,20 @@ function PagedGrid({ jobs, textSize, maximumNumberOfColumns }: PagedGridProps) {
   const [viewportWidth, setViewportWidth] = useState(getInitialViewportWidth);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const columnCount = getColumnCount(jobs.length, maximumNumberOfColumns);
-  const rowsPerPage = getRowsPerPage({ viewportHeight, textSize });
+  const columnCount =
+    maxRows === null
+      ? getColumnCount(jobs.length, maximumNumberOfColumns)
+      : maximumNumberOfColumns;
+  const rowsPerPage =
+    maxRows === null ? getRowsPerPage({ viewportHeight, textSize }) : maxRows;
   const pages = useMemo(
-    () => paginateItems(jobs, columnCount, rowsPerPage),
-    [jobs, columnCount, rowsPerPage],
+    () => createBoardPages(jobs, groupPattern, columnCount, rowsPerPage),
+    [jobs, groupPattern, columnCount, rowsPerPage],
   );
 
   const scrollToPage = (pageIndex: number, behavior: ScrollBehavior = "smooth") => {
     const viewport = viewportRef.current;
-    if (!viewport) {
+    if (viewport === null) {
       return;
     }
 
@@ -48,7 +59,7 @@ function PagedGrid({ jobs, textSize, maximumNumberOfColumns }: PagedGridProps) {
 
   useEffect(() => {
     const viewport = viewportRef.current;
-    if (!viewport) {
+    if (viewport === null) {
       return;
     }
 
@@ -71,30 +82,21 @@ function PagedGrid({ jobs, textSize, maximumNumberOfColumns }: PagedGridProps) {
   }, []);
 
   useEffect(() => {
-    setCurrentPage((page) => Math.min(page, Math.max(pages.length - 1, 0)));
-  }, [pages.length]);
-
-  useEffect(() => {
     if (viewportWidth <= 0) {
       return;
     }
 
-    scrollToPage(currentPage, "auto");
-  }, [viewportWidth]);
-
-  useEffect(() => {
     const lastPageIndex = Math.max(pages.length - 1, 0);
-    if (currentPage <= lastPageIndex) {
-      return;
+    const nextPage = Math.min(currentPage, lastPageIndex);
+    if (nextPage !== currentPage) {
+      setCurrentPage(nextPage);
     }
-
-    setCurrentPage(lastPageIndex);
-    scrollToPage(lastPageIndex, "auto");
-  }, [currentPage, pages.length]);
+    scrollToPage(nextPage, "auto");
+  }, [pages.length, viewportWidth]);
 
   const handleScroll = () => {
     const viewport = viewportRef.current;
-    if (!viewport) {
+    if (viewport === null) {
       return;
     }
 
@@ -119,26 +121,74 @@ function PagedGrid({ jobs, textSize, maximumNumberOfColumns }: PagedGridProps) {
         onScroll={handleScroll}
       >
         <div className="bm-grid-track">
-          {pages.map((pageJobs, pageIndex) => (
-            <section
-              key={`page-${pageIndex}`}
-              className="bm-grid-page"
-              aria-label={`Page ${pageIndex + 1} of ${pages.length}`}
-            >
-              <div
-                className="bm-grid"
-                style={{
-                  fontSize: textSize + "rem",
-                  gridTemplateColumns: "1fr ".repeat(columnCount),
-                  gridTemplateRows: "minmax(0, 1fr) ".repeat(rowsPerPage),
-                }}
+          {pages.map((pageRows, pageIndex) => {
+            const rowHeadings = pageRows.map(
+              (row, rowIndex) =>
+                row.group !== "" && (row.startsGroup || rowIndex === 0),
+            );
+            const rowTracks = Array.from(
+              { length: rowsPerPage },
+              (_, rowIndex) => {
+                const tileTrack = `[jobs-${rowIndex}] minmax(0, 1fr)`;
+                if (rowHeadings[rowIndex] === true) {
+                  return `[heading-${rowIndex}] max-content ${tileTrack}`;
+                }
+                return tileTrack;
+              },
+            );
+
+            return (
+              <section
+                key={`page-${pageIndex}`}
+                className="bm-grid-page"
+                aria-label={`Page ${pageIndex + 1} of ${pages.length}`}
               >
-                {pageJobs.map((job) => (
-                  <Cell key={job.url} job={job} />
-                ))}
-              </div>
-            </section>
-          ))}
+                <div
+                  className="bm-grid"
+                  style={{
+                    fontSize: textSize + "rem",
+                    gridTemplateColumns: "minmax(0, 1fr)",
+                    gridTemplateRows: rowTracks.join(" var(--bm-grid-gap) "),
+                  }}
+                >
+                  {pageRows.map((row, rowIndex) => (
+                    <Fragment key={row.jobs[0].url}>
+                      {rowHeadings[rowIndex] && (
+                        <div
+                          className="bm-grid-row__group"
+                          style={{ gridRow: `heading-${rowIndex}` }}
+                        >
+                          {row.group}
+                        </div>
+                      )}
+                      <section
+                        className="bm-grid-row"
+                        aria-label={row.group || undefined}
+                        style={{ gridRow: `jobs-${rowIndex}` }}
+                      >
+                        <div
+                          className="bm-grid-row__jobs"
+                          style={{
+                            gridTemplateColumns: "minmax(0, 1fr) ".repeat(
+                              columnCount,
+                            ),
+                          }}
+                        >
+                          {row.jobs.map((job) => (
+                            <Cell
+                              key={job.url}
+                              job={job}
+                              nameStripPattern={nameStripPattern}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    </Fragment>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </div>
       </div>
 

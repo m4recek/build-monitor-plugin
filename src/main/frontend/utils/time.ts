@@ -1,4 +1,6 @@
-export default function time(ago: number) {
+import type { JobStatus } from "../models/job.ts";
+
+export default function time(ago: number, status: JobStatus) {
   const seconds = 1000;
   const minutes = 60 * seconds;
   const hours = 60 * minutes;
@@ -47,7 +49,7 @@ export default function time(ago: number) {
 
   switch (true) {
     case ago <= 30 * seconds:
-      return "just now :-)";
+      return status === "failing" ? "just now :-(" : "just now :-)";
     case ago <= 5 * minutes:
       return "a moment ago";
     default:

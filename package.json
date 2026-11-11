@@ -1,7 +1,7 @@
 {
-  "name": "build-monitor-plugin",
+  "name": "groupsolver-build-board",
   "version": "1.0.0",
-  "description": "Build Monitor",
+  "description": "GroupSolver Build Board",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,11 +14,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:jenkinsci/build-monitor-plugin.git"
+    "url": "git@github.com:m4recek/build-monitor-plugin.git"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jenkinsci/build-monitor-plugin/issues"
+    "url": "https://github.com/m4recek/build-monitor-plugin/issues"
   },
   "dependencies": {
     "@tippyjs/react": "4.2.6",

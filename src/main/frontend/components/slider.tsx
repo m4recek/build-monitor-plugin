@@ -35,6 +35,7 @@ export default function Slider({
       <input
         className={"bm-slider"}
         type="range"
+        aria-label={label}
         min={min}
         max={max}
         value={value}

@@ -9,11 +9,12 @@
     <relativePath />
   </parent>
 
-  <artifactId>build-monitor-plugin</artifactId>
+  <groupId>com.groupsolver.jenkins</groupId>
+  <artifactId>groupsolver-build-board</artifactId>
   <version>${changelist}</version>
   <packaging>hpi</packaging>
-  <name>Build Monitor View</name>
-  <url>https://github.com/jenkinsci/build-monitor-plugin</url>
+  <name>GroupSolver Build Board</name>
+  <url>https://github.com/m4recek/build-monitor-plugin</url>
 
   <licenses>
     <license>
@@ -40,20 +41,13 @@
     <url>https://github.com/${gitHubRepo}</url>
   </scm>
 
-  <distributionManagement>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/releases</url>
-    </repository>
-  </distributionManagement>
-
   <properties>
-    <revision>1.14</revision>
-    <changelist>999999-SNAPSHOT</changelist>
+    <revision>1.0</revision>
+    <changelist>1.4.0-test</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.516</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <gitHubRepo>jenkinsci/build-monitor-plugin</gitHubRepo>
+    <gitHubRepo>m4recek/build-monitor-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
     <node.version>24.15.0</node.version>

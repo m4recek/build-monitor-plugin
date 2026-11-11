@@ -1,0 +1,18 @@
+jenkins:
+  views:
+    - buildBoard:
+        includeRegex: ".+\\/(my-job-.*)\\/(master|demo)"
+        name: "My-Monitor"
+        recurse: true
+        title: "My Monitor"
+        config:
+          maxColumns: 2
+          maxRows: 3
+          groupRegex: "_(PROD|DEV)_"
+          nameStripRegex: '^(?:Tests\s*(?:»|>>|/)\s*)?TEST_(?:PROD|DEV)_'
+          order: "byStatus"
+          displayCommitters: false
+          colourBlindMode: true
+          displayJUnitProgress: false
+          showBadges: false
+          autoRefreshEvery: 10

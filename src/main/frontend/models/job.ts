@@ -1,10 +1,26 @@
 export interface Job {
   name: string;
   url: string;
+  targetUrl: string;
+  runUrl: string | null;
+  previousBuilds: {
+    name: string;
+    url: string;
+    targetUrl: string;
+    status: JobStatus;
+    startedAt: number;
+    duration: string;
+  }[];
   status: JobStatus;
   disabled: boolean;
   hashCode: number;
+  resultOpacity: number;
   progress: number;
+  stageProgress: {
+    percentage: number;
+    indeterminate: boolean;
+    boundaries: number[];
+  } | null;
   estimatedDuration: string;
   config: {
     displayBadges: string;
@@ -55,7 +71,7 @@ export interface Job {
   }[];
 }
 
-// Aligns with build-monitor-plugin/src/main/java/com/smartcodeltd/jenkinsci/plugins/buildmonitor/viewmodel/CssStatus.java
+// Aligns with build-monitor-plugin/src/main/java/com/groupsolver/jenkins/plugins/buildboard/viewmodel/CssStatus.java
 export type JobStatus =
   | "successful"
   | "unstable"

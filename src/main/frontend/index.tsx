@@ -3,7 +3,6 @@ import "./app.scss";
 import { createRoot } from "react-dom/client";
 
 import Container from "./components/container";
-import PageDescription from "./components/page-description.tsx";
 import { UseConfirmationProvider } from "./context/confirmation-provider.tsx";
 import { JobsProvider } from "./context/jobs-provider.tsx";
 import { UseNotificationProvider } from "./context/notification-provider.tsx";
@@ -18,12 +17,13 @@ root.render(
   <UseNotificationProvider>
     <UseConfirmationProvider>
       <UserPreferencesProvider
-        monitorId={rootElement.dataset.buildMonitorId!}
+        monitorId={rootElement.dataset.buildBoardId!}
         defaultPreferences={{
           textSize: Number(rootElement.dataset.appearanceTextSize),
           maximumNumberOfColumns: Number(
             rootElement.dataset.appearanceMaximumNumberOfColumns,
           ),
+          maximumNumberOfRows: Number(rootElement.dataset.maxRows),
           colorBlindMode:
             rootElement.dataset.appearanceColorBlindMode === "true",
           showBadges: rootElement.dataset.appearanceShowBadges === "true",
@@ -32,9 +32,9 @@ root.render(
         <JobsProvider
           autoRefreshEvery={Number(rootElement.dataset.autoRefreshEvery)}
         >
-          <Container />
-          <PageDescription
-            description={rootElement.dataset.buildMonitorDescription}
+          <Container
+            groupRegex={rootElement.dataset.groupRegex!}
+            nameStripRegex={rootElement.dataset.nameStripRegex!}
           />
         </JobsProvider>
       </UserPreferencesProvider>

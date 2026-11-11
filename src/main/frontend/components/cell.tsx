@@ -1,6 +1,10 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { useUserPreferences } from "../context/user-preference-provider.tsx";
 import { Job } from "../models/job";
+import openInNewTab from "../utils/open-in-new-tab.ts";
 import { buildStatusToClass } from "../utils/utils.ts";
+import BuildHistoryMenu from "./build-history-menu.tsx";
 import Label from "./label";
 import Badges from "./snippets/badges.tsx";
 import BuildNumber from "./snippets/build-number.tsx";
@@ -9,53 +13,162 @@ import Claim from "./snippets/claim.tsx";
 import Problems from "./snippets/problems.tsx";
 import Tests from "./snippets/tests.tsx";
 
-function Cell({ job }: { job: Job }) {
+function Cell({
+  job,
+  nameStripPattern,
+}: {
+  job: Job;
+  nameStripPattern: RegExp | null;
+}) {
   const { colorBlindMode } = useUserPreferences();
+  const tile = useRef<HTMLAnchorElement>(null);
+  const timer = useRef<number | undefined>(undefined);
+  const touchStart = useRef({ x: 0, y: 0 });
+  const held = useRef(false);
+  const [menuPoint, setMenuPoint] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const name =
+    nameStripPattern === null
+      ? job.name
+      : job.name.replace(nameStripPattern, "");
+  let progressWidth = `${job.progress}%`;
+  if (job.stageProgress !== null) {
+    progressWidth = job.stageProgress.indeterminate
+      ? "10px"
+      : `${job.stageProgress.percentage}%`;
+  }
+  const closeMenu = useCallback((restoreFocus = false) => {
+    setMenuPoint(null);
+    held.current = false;
+    if (restoreFocus) {
+      tile.current?.focus();
+    }
+  }, []);
+  const cancelHold = () => window.clearTimeout(timer.current);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   return (
-    <a
-      href={job.url}
-      className={
-        "bm-cell bm-cell" +
-        buildStatusToClass(job) +
-        " " +
-        (colorBlindMode ? "bm-cell--color-blind-mode" : "")
-      }
-    >
-      <div
-        className={"bm-cell-duration bm-cell-duration--animate"}
-        style={{ width: job.progress + "%" }}
-      />
-
-      <h2>
-        <Label
-          text={job.name}
-          style={{
-            fontSize: "1.25em",
-            fontWeight: "550",
-            color:
-              "var(--bm-contrast, color-mix(in srgb, var(--bm-cell-color), var(--text-color)))",
-          }}
+    <>
+      <a
+        ref={tile}
+        aria-haspopup="menu"
+        aria-expanded={menuPoint !== null}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          held.current = true;
+          cancelHold();
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const keyboard = event.clientX === 0 && event.clientY === 0;
+          setMenuPoint({
+            x: keyboard ? bounds.left + bounds.width / 2 : event.clientX,
+            y: keyboard ? bounds.top + bounds.height / 2 : event.clientY,
+          });
+        }}
+        onPointerDown={(event) => {
+          held.current = false;
+          cancelHold();
+          if (event.pointerType === "touch" || event.pointerType === "pen") {
+            const point = { x: event.clientX, y: event.clientY };
+            touchStart.current = point;
+            timer.current = window.setTimeout(() => {
+              held.current = true;
+              setMenuPoint(point);
+            }, 500);
+          }
+        }}
+        onPointerMove={(event) => {
+          if (
+            Math.hypot(
+              event.clientX - touchStart.current.x,
+              event.clientY - touchStart.current.y,
+            ) > 10
+          ) {
+            cancelHold();
+          }
+        }}
+        onPointerUp={cancelHold}
+        onPointerCancel={cancelHold}
+        href={job.targetUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(event) => {
+          if (held.current) {
+            event.preventDefault();
+            held.current = false;
+            return;
+          }
+          if (
+            event.shiftKey &&
+            event.metaKey === false &&
+            event.ctrlKey === false
+          ) {
+            event.preventDefault();
+            openInNewTab(event.currentTarget.href);
+          }
+        }}
+        style={job.disabled ? undefined : { opacity: job.resultOpacity }}
+        className={
+          "bm-cell bm-cell" +
+          buildStatusToClass(job) +
+          " " +
+          (colorBlindMode ? "bm-cell--color-blind-mode" : "")
+        }
+      >
+        <div
+          className={"bm-cell-duration bm-cell-duration--animate"}
+          style={{ width: progressWidth }}
         />
-      </h2>
 
-      {job.headline && !job.claim?.active && <Label text={job.headline} />}
+        {job.stageProgress?.boundaries.map((boundary, index) => (
+          <span
+            key={index}
+            aria-hidden="true"
+            className="bm-cell-stage-boundary"
+            style={{ left: `${boundary}%` }}
+          />
+        ))}
 
-      {job.lastCompletedBuild.description && (
-        <Label text={job.lastCompletedBuild.description} />
+        <h2>
+          <Label
+            text={name}
+            style={{
+              fontSize: "1.25em",
+              fontWeight: "550",
+              color:
+                "var(--bm-contrast, color-mix(in srgb, var(--bm-cell-color), var(--text-color)))",
+            }}
+          />
+        </h2>
+
+        {job.headline && !job.claim?.active && <Label text={job.headline} />}
+
+        {job.lastCompletedBuild.description && (
+          <Label text={job.lastCompletedBuild.description} />
+        )}
+
+        <Claim job={job} />
+        <Problems job={job} />
+        <Tests job={job} />
+        <Badges job={job} />
+
+        <div className={"bm-cell__details"}>
+          <BuildNumber job={job} />
+
+          <BuildTime job={job} />
+        </div>
+      </a>
+      {menuPoint !== null && (
+        <BuildHistoryMenu
+          name={name}
+          jobUrl={job.url}
+          runUrl={job.runUrl}
+          builds={job.previousBuilds}
+          point={menuPoint}
+          onClose={closeMenu}
+        />
       )}
-
-      <Claim job={job} />
-      <Problems job={job} />
-      <Tests job={job} />
-      <Badges job={job} />
-
-      <div className={"bm-cell__details"}>
-        <BuildNumber job={job} />
-
-        <BuildTime job={job} />
-      </div>
-    </a>
+    </>
   );
 }
 

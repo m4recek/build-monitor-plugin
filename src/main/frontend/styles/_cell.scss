@@ -11,6 +11,7 @@ $cell-padding: 1rem;
   appearance: none;
   background: none;
   cursor: pointer;
+  -webkit-touch-callout: none;
   text-decoration: none !important;
   border-radius: 1rem;
   font-size: 1.5em;
@@ -149,6 +150,18 @@ $cell-padding: 1rem;
       opacity: 0.2;
       animation: pulse-thing 2s ease-in-out infinite;
     }
+  }
+
+  .bm-cell-stage-boundary {
+    position: absolute;
+    bottom: 0;
+    width: 2px;
+    height: 7px;
+    transform: translateX(-50%);
+    border-radius: 0;
+    background: currentColor;
+    opacity: 0.5;
+    pointer-events: none;
   }
 
   @keyframes pulse-thing {

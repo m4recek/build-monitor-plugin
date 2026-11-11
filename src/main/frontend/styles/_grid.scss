@@ -7,13 +7,12 @@
 }
 
 .bm-grid {
+  --bm-grid-gap: calc(var(--section-padding) / 4);
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: calc(var(--section-padding) / 2);
+  gap: 0;
   padding-inline: calc(var(--section-padding) / 2);
   padding-bottom: calc(var(--section-padding) / 2);
-  // Force all rows to have equal height
-  grid-auto-rows: 1fr;
   min-height: 0;
   height: 100%;
 
@@ -61,8 +60,29 @@
 
 .bm-grid-track {
   display: flex;
-  gap: calc(var(--section-padding) / 2);
   height: 100%;
+}
+
+.bm-grid-row {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.bm-grid-row__group {
+  min-height: 1em;
+  font-size: 16px;
+  line-height: 2;
+  font-weight: 600;
+  padding-inline: 0.25em;
+}
+
+.bm-grid-row__jobs {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  gap: var(--bm-grid-gap);
 }
 
 .bm-grid-page {

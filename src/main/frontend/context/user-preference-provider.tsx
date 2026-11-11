@@ -10,10 +10,12 @@ interface MonitorPreferences {
   colorBlindMode: boolean;
   textSize: number;
   maximumNumberOfColumns: number;
+  maximumNumberOfRows: number;
   showBadges: boolean;
   setColorBlindMode: (val: boolean) => void;
   setTextSize: (val: number) => void;
   setMaximumNumberOfColumns: (val: number) => void;
+  setMaximumNumberOfRows: (val: number) => void;
   setShowBadges: (val: boolean) => void;
   reset: () => void;
   isResettable: boolean;
@@ -24,7 +26,7 @@ const UserPreferencesContext = createContext<MonitorPreferences | undefined>(
 );
 
 const makeKey = (monitorId: string, setTing: string) =>
-  `buildMonitor.${monitorId}.${setTing}`;
+  `groupsolverBuildBoard.${monitorId}.${setTing}`;
 
 const loadFromLocalStorage = <T,>(key: string, fallback: T): T => {
   if (typeof window === "undefined") return fallback;
@@ -55,6 +57,7 @@ export const UserPreferencesProvider = ({
   defaultPreferences: {
     textSize: number;
     maximumNumberOfColumns: number;
+    maximumNumberOfRows: number;
     colorBlindMode: boolean;
     showBadges: boolean;
   };
@@ -62,6 +65,7 @@ export const UserPreferencesProvider = ({
   const colorBlindKey = makeKey(monitorId, "colorBlind");
   const textSizeKey = makeKey(monitorId, "textSize");
   const maximumNumberOfColumnsKey = makeKey(monitorId, "numberOfColumns");
+  const maximumNumberOfRowsKey = makeKey(monitorId, "numberOfRows");
   const showBadgesKey = makeKey(monitorId, "showBadges");
 
   const [colorBlindMode, setColorBlindModeState] = useState<boolean>(
@@ -79,6 +83,9 @@ export const UserPreferencesProvider = ({
     );
   const [showBadges, setShowBadgesState] = useState<boolean>(
     loadFromLocalStorage(showBadgesKey, defaultPreferences.showBadges),
+  );
+  const [maximumNumberOfRows, setMaximumNumberOfRowsState] = useState(
+    loadFromLocalStorage(maximumNumberOfRowsKey, defaultPreferences.maximumNumberOfRows),
   );
 
   useEffect(() => {
@@ -100,10 +107,15 @@ export const UserPreferencesProvider = ({
     window.localStorage.setItem(showBadgesKey, String(showBadges));
   }, [showBadges]);
 
+  useEffect(() => {
+    window.localStorage.setItem(maximumNumberOfRowsKey, String(maximumNumberOfRows));
+  }, [maximumNumberOfRows]);
+
   function reset() {
     setColorBlindModeState(defaultPreferences.colorBlindMode);
     setTextSizeState(defaultPreferences.textSize);
     setMaximumNumberOfColumnsState(defaultPreferences.maximumNumberOfColumns);
+    setMaximumNumberOfRowsState(defaultPreferences.maximumNumberOfRows);
     setShowBadgesState(defaultPreferences.showBadges);
   }
 
@@ -113,10 +125,12 @@ export const UserPreferencesProvider = ({
         colorBlindMode,
         textSize,
         maximumNumberOfColumns,
+        maximumNumberOfRows,
         showBadges,
         setColorBlindMode: setColorBlindModeState,
         setTextSize: setTextSizeState,
         setMaximumNumberOfColumns: setMaximumNumberOfColumnsState,
+        setMaximumNumberOfRows: setMaximumNumberOfRowsState,
         setShowBadges: setShowBadgesState,
         reset,
         isResettable:
@@ -124,6 +138,7 @@ export const UserPreferencesProvider = ({
           textSize === defaultPreferences.textSize &&
           maximumNumberOfColumns ===
             defaultPreferences.maximumNumberOfColumns &&
+          maximumNumberOfRows === defaultPreferences.maximumNumberOfRows &&
           showBadges === defaultPreferences.showBadges,
       }}
     >
