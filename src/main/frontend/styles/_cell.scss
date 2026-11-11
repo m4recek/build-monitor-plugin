@@ -152,6 +152,18 @@ $cell-padding: 1rem;
     }
   }
 
+  .bm-cell-stage-boundary {
+    position: absolute;
+    bottom: 0;
+    width: 2px;
+    height: 7px;
+    transform: translateX(-50%);
+    border-radius: 0;
+    background: currentColor;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   @keyframes pulse-thing {
     50% {
       opacity: 0.25;

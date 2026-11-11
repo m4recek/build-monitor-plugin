@@ -36,6 +36,7 @@ const makeJob = (name: string): Job => ({
   disabled: false,
   hashCode: 1,
   progress: 0,
+  stageProgress: null,
   resultOpacity: 1,
   estimatedDuration: "",
   config: { displayBadges: "Never" },
@@ -73,6 +74,62 @@ const board = (jobs: Job[]) => (
 );
 
 describe("paged board", () => {
+  it("renders weighted stage boundaries and a fixed waiting strip without hiding build details", () => {
+    const job = makeJob("TEST_PROD_stages");
+    job.status = "running";
+    job.stageProgress = {
+      percentage: 0,
+      indeterminate: true,
+      boundaries: [10, 30, 60],
+    };
+    job.currentBuilds = [
+      {
+        name: "#934",
+        url: "",
+        result: null,
+        isRunning: true,
+        elapsedTime: "40m",
+        timeElapsedSince: "",
+        duration: "40m",
+        estimatedDuration: "80m",
+        progress: 0,
+        description: "",
+        isPipeline: true,
+        pipelineStages: "",
+        hasPreviousBuild: true,
+        previousBuild: null,
+        culprits: [],
+        committers: [],
+      },
+    ];
+    const { container, rerender } = render(board([job]));
+    expect(container.querySelector(".bm-cell-duration")).toHaveStyle({
+      width: "10px",
+    });
+    expect(screen.getByText("#934")).toBeVisible();
+    expect(screen.getByText("40m")).toBeVisible();
+    expect(
+      [
+        ...container.querySelectorAll<HTMLElement>(".bm-cell-stage-boundary"),
+      ].map((tick) => tick.style.left),
+    ).toEqual(["10%", "30%", "60%"]);
+    job.stageProgress = {
+      percentage: 45,
+      indeterminate: false,
+      boundaries: [10, 30, 60],
+    };
+    rerender(board([job]));
+    expect(container.querySelector(".bm-cell-duration")).toHaveStyle({
+      width: "45%",
+    });
+    job.stageProgress = null;
+    job.currentBuilds = [];
+    rerender(board([job]));
+    expect(container.querySelectorAll(".bm-cell-stage-boundary")).toHaveLength(
+      0,
+    );
+  });
+
   it("queues one immediate run with the Jenkins crumb and shows accepted feedback", async () => {
     const job = makeJob("TEST_PROD_run");
     const request = vi.fn().mockResolvedValue({ status: 201 });

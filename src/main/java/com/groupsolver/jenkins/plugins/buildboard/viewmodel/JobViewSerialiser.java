@@ -22,6 +22,7 @@ public class JobViewSerialiser extends JsonSerializer<JobView> {
         jgen.writeObjectField("disabled", job.isDisabled());
         jgen.writeObjectField("hashCode", job.hashCode());
         jgen.writeObjectField("progress", job.progress());
+        jgen.writeObjectField("stageProgress", job.stageProgress());
         jgen.writeNumberField("resultOpacity", job.resultOpacity());
         jgen.writeObjectField("estimatedDuration", job.estimatedDuration());
 

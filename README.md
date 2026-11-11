@@ -71,6 +71,8 @@ Verify coexistence with the official plugin using `mvn -Dtest=PluginCoexistenceI
 
 Verify tile navigation with `mvn -Dtest=HtmlReportNavigationIT -DhtmlPublisherArchive=/absolute/path/htmlpublisher.hpi test`. Use an age-eligible, checksum-verified HTML Publisher HPI; version 427.1 is covered. This browser test uses full Chromium, publishes real Pipeline reports, follows report and console links in a folder, and checks missing files, nested filename patterns, never-built jobs, historical-run menus, long-press, and new tabs in the same window.
 
+Running Pipelines allocate tile width to top-level stages using their mean execution durations from the five previous completed runs. Queue time before stages and recorded pauses within stages are excluded. An overdue stage cannot fill a future stage's allocation. Straight 2px × 7px ticks mark cumulative stage boundaries, using the tile text color at 50% opacity; they overlay the bottom edge without moving text. Waiting builds and stages without historical estimates use a fixed 10px strip. Non-Pipeline jobs retain their existing progress calculation.
+
 Build the Jenkins plugin with `mvn verify`; the installable artifact is `target/groupsolver-build-board.hpi`. Frontend checks are `npm test`, `./node_modules/.bin/eslint src/main/frontend/`, `./node_modules/.bin/tsc --noEmit`, and `npm run build`. On Node 24, run tests with `NODE_OPTIONS=--no-experimental-webstorage npm test` so jsdom provides browser storage.
 
 # A picture is worth a thousand words

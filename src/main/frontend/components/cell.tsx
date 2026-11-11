@@ -32,6 +32,12 @@ function Cell({
     nameStripPattern === null
       ? job.name
       : job.name.replace(nameStripPattern, "");
+  let progressWidth = `${job.progress}%`;
+  if (job.stageProgress !== null) {
+    progressWidth = job.stageProgress.indeterminate
+      ? "10px"
+      : `${job.stageProgress.percentage}%`;
+  }
   const closeMenu = useCallback((restoreFocus = false) => {
     setMenuPoint(null);
     held.current = false;
@@ -111,8 +117,17 @@ function Cell({
       >
         <div
           className={"bm-cell-duration bm-cell-duration--animate"}
-          style={{ width: job.progress + "%" }}
+          style={{ width: progressWidth }}
         />
+
+        {job.stageProgress?.boundaries.map((boundary, index) => (
+          <span
+            key={index}
+            aria-hidden="true"
+            className="bm-cell-stage-boundary"
+            style={{ left: `${boundary}%` }}
+          />
+        ))}
 
         <h2>
           <Label

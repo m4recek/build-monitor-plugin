@@ -2,6 +2,7 @@ package com.groupsolver.jenkins.plugins.buildboard.viewmodel;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.groupsolver.jenkins.plugins.buildboard.facade.RelativeLocation;
+import com.groupsolver.jenkins.plugins.buildboard.pipeline.PipelineProgress;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.duration.Duration;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.duration.HumanReadableDuration;
 import com.groupsolver.jenkins.plugins.buildboard.viewmodel.features.Feature;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import jenkins.model.ParameterizedJobMixIn;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 /**
  * @author Jan Molak
@@ -33,6 +35,7 @@ public class JobView {
     private final Job<?, ?> job;
     private final boolean isPipelineJob;
     private final RelativeLocation relative;
+    private final PipelineProgress stageProgress;
 
     private final List<Feature> features = new ArrayList<>();
 
@@ -46,6 +49,9 @@ public class JobView {
         this.isPipelineJob = isPipelineJob;
         this.relative = relative;
         this.systemTime = systemTime;
+        this.stageProgress = isPipelineJob && job.getLastBuild() instanceof WorkflowRun run && run.isBuilding()
+                ? PipelineProgress.of(run, systemTime.getTime())
+                : null;
 
         for (Feature feature : features) {
             this.features.add(feature.of(this));
@@ -181,7 +187,14 @@ public class JobView {
     }
 
     public int progress() {
+        if (stageProgress != null) {
+            return (int) stageProgress.percentage();
+        }
         return lastBuild().progress();
+    }
+
+    public PipelineProgress stageProgress() {
+        return stageProgress;
     }
 
     public boolean isDisabled() {

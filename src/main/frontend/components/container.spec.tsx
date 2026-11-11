@@ -33,6 +33,7 @@ beforeEach(() => {
           runUrl: `/job/${index}/build?delay=0sec`,
           status: "successful",
           progress: 0,
+          stageProgress: null,
           resultOpacity: 1,
           estimatedDuration: "",
           config: { displayBadges: "Never" },

@@ -5,9 +5,9 @@ import time from "../../utils/time.ts";
 import Label from "../label.tsx";
 
 export default function BuildTime({ job }: { job: Job }) {
-  const hasCurrentBuilds = job.estimatedDuration && job.progress > 0;
+  const hasCurrentBuilds = job.currentBuilds.length > 0;
   const hasLastCompletedBuild =
-    job.lastCompletedBuild?.timeElapsedSince && job.progress === 0;
+    job.lastCompletedBuild?.timeElapsedSince && hasCurrentBuilds === false;
 
   return (
     <div>

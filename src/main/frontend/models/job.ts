@@ -16,6 +16,11 @@ export interface Job {
   hashCode: number;
   resultOpacity: number;
   progress: number;
+  stageProgress: {
+    percentage: number;
+    indeterminate: boolean;
+    boundaries: number[];
+  } | null;
   estimatedDuration: string;
   config: {
     displayBadges: string;
