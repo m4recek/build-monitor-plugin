@@ -41,6 +41,18 @@ class ShouldCancelRunningBuildTest {
                     AriaRole.MENUITEM,
                     new Page.GetByRoleOptions().setName("Cancel build #2").setExact(true));
             assertThat(cancelSecond).isEnabled();
+            String alignedActions = """
+                    () => {
+                      const cancel = document.querySelector('.bm-build-history__cancel-button');
+                      const run = document.querySelector('.bm-build-history__run-button');
+                      const a = cancel.getBoundingClientRect();
+                      const b = run.getBoundingClientRect();
+                      return a.right <= b.left && Math.abs(a.top - b.top) < 0.01
+                        && Math.abs(a.height - b.height) < 0.01
+                        && (cancel.compareDocumentPosition(run) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+                    }
+                    """;
+            assertTrue((Boolean) p.evaluate(alignedActions), "Cancel must precede Run with matching button heights");
             assertTrue((Boolean) cancelSecond.evaluate("""
                     button => {
                       const probe = document.createElement('span');
@@ -53,6 +65,7 @@ class ShouldCancelRunningBuildTest {
                     """));
             p.setViewportSize(320, 640);
             p.locator(".bm-cell").click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+            assertTrue((Boolean) p.evaluate(alignedActions), "Buttons must remain aligned at 320px");
             assertTrue((Boolean)
                     p.locator(".bm-build-history").evaluate("element => element.scrollWidth <= element.clientWidth"));
             cancelSecond.click();

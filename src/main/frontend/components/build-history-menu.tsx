@@ -213,7 +213,14 @@ export default function BuildHistoryMenu({
             {EXTERNAL_LINK_SYMBOL}
           </a>
         </div>
-        <div className="bm-build-history__actions">
+        <div className="bm-build-history__actions bm-build-history__actions--builds">
+          {cancelBuild !== null && (
+            <CancelBuildButton
+              key={cancelBuild.url ?? cancelBuild.name}
+              build={cancelBuild}
+              onError={setActionError}
+            />
+          )}
           <button
             type="button"
             role="menuitem"
@@ -258,13 +265,6 @@ export default function BuildHistoryMenu({
             {runState === "queuing" && "Queuing…"}
             {runState === "queued" && "Queued"}
           </button>
-          {cancelBuild !== null && (
-            <CancelBuildButton
-              key={cancelBuild.url ?? cancelBuild.name}
-              build={cancelBuild}
-              onError={setActionError}
-            />
-          )}
         </div>
       </div>
       {actionError !== null && (
