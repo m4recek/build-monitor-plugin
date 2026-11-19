@@ -95,6 +95,20 @@ public class JobView {
         return null;
     }
 
+    public CancelBuild cancelBuild() {
+        Run<?, ?> build = job.getLastBuild();
+        if (build != null && build.isBuilding() == false) {
+            build = build.getPreviousBuildInProgress();
+        }
+        if (build == null || build.isBuilding() == false) {
+            return null;
+        }
+        return new CancelBuild(
+                build.getDisplayName(), job.hasPermission(Item.CANCEL) ? buildUrl(build) + "stop" : null);
+    }
+
+    public record CancelBuild(String name, String url) {}
+
     public List<PreviousBuild> previousBuilds() throws IOException {
         List<PreviousBuild> builds = new ArrayList<>();
         Run<?, ?> latest = job.getLastBuild();

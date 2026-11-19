@@ -50,6 +50,30 @@
     color: var(--destructive-color);
   }
 
+  button.bm-build-history__cancel-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid
+      color-mix(in srgb, var(--destructive-color) 50%, transparent);
+    background: color-mix(in srgb, var(--destructive-color) 10%, transparent);
+    color: var(--destructive-color);
+    font: inherit;
+    padding: 0.4rem 0.65rem;
+    cursor: pointer;
+
+    svg {
+      width: 0.9rem;
+      height: 0.9rem;
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
   &__run {
     display: grid;
     grid-template-columns: max-content 1.5rem minmax(0, 1fr);

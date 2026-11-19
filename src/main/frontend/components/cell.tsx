@@ -163,6 +163,7 @@ function Cell({
           name={name}
           jobUrl={job.url}
           runUrl={job.runUrl}
+          cancelBuild={job.cancelBuild}
           builds={job.previousBuilds}
           point={menuPoint}
           onClose={closeMenu}

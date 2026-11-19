@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 
 import { Job, JobStatus } from "../models/job.ts";
 import openInNewTab from "../utils/open-in-new-tab.ts";
-import { EXTERNAL_LINK_SYMBOL } from "../utils/symbols.tsx";
+import { CANCEL_SYMBOL, EXTERNAL_LINK_SYMBOL } from "../utils/symbols.tsx";
 
 const buildTimeFormat = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
@@ -21,10 +21,87 @@ const resultLabels: Record<JobStatus, string> = {
   running: "Running",
 };
 
+function CancelBuildButton({
+  build,
+  onError,
+}: {
+  build: NonNullable<Job["cancelBuild"]>;
+  onError: (message: string | null) => void;
+}) {
+  const submitting = useRef(false);
+  const [state, setState] = useState<"idle" | "canceling" | "requested">(
+    "idle",
+  );
+  let label = `Cancel build ${build.name}`;
+  if (state === "canceling") {
+    label = `Canceling build ${build.name}`;
+  }
+  if (state === "requested") {
+    label = `Cancellation requested for build ${build.name}`;
+  }
+
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      className="bm-build-history__cancel-button"
+      aria-label={label}
+      aria-busy={state === "canceling"}
+      title={
+        build.url === null
+          ? "You do not have permission to cancel this build"
+          : label
+      }
+      disabled={build.url === null || state !== "idle"}
+      onClick={async () => {
+        if (submitting.current || build.url === null) {
+          return;
+        }
+        submitting.current = true;
+        setState("canceling");
+        onError(null);
+        const referrer = new URL(window.location.href);
+        referrer.hash = "";
+        try {
+          const response = await fetch(build.url, {
+            method: "POST",
+            headers: window.crumb.wrap({}),
+            redirect: "follow",
+            referrer: referrer.href,
+            referrerPolicy: "same-origin",
+          });
+          if (
+            response.ok === false ||
+            (response.redirected && response.url !== referrer.href)
+          ) {
+            throw new Error(
+              `Jenkins did not accept cancellation (HTTP ${response.status}).`,
+            );
+          }
+          setState("requested");
+        } catch (error) {
+          submitting.current = false;
+          setState("idle");
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Cancellation request failed.";
+          onError(
+            `${build.name}: ${message} Check Jenkins before trying again.`,
+          );
+        }
+      }}
+    >
+      {CANCEL_SYMBOL}
+    </button>
+  );
+}
+
 export default function BuildHistoryMenu({
   name,
   jobUrl,
   runUrl,
+  cancelBuild,
   builds,
   point,
   onClose,
@@ -32,6 +109,7 @@ export default function BuildHistoryMenu({
   name: string;
   jobUrl: string;
   runUrl: string | null;
+  cancelBuild: Job["cancelBuild"];
   builds: Job["previousBuilds"];
   point: { x: number; y: number };
   onClose: (restoreFocus?: boolean) => void;
@@ -42,7 +120,7 @@ export default function BuildHistoryMenu({
   const [runState, setRunState] = useState<"idle" | "queuing" | "queued">(
     "idle",
   );
-  const [runError, setRunError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     const element = menu.current;
@@ -54,7 +132,7 @@ export default function BuildHistoryMenu({
       x: Math.max(8, Math.min(point.x, window.innerWidth - bounds.width - 8)),
       y: Math.max(8, Math.min(point.y, window.innerHeight - bounds.height - 8)),
     });
-  }, [point.x, point.y, runState, runError]);
+  }, [point.x, point.y, runState, actionError, cancelBuild !== null]);
 
   useLayoutEffect(() => {
     const element = menu.current;
@@ -135,54 +213,63 @@ export default function BuildHistoryMenu({
             {EXTERNAL_LINK_SYMBOL}
           </a>
         </div>
-        <button
-          type="button"
-          role="menuitem"
-          className="bm-build-history__run-button"
-          disabled={runUrl === null || runState !== "idle"}
-          title={
-            runUrl === null
-              ? "Job is not buildable or you do not have build permission"
-              : "Queue a new build immediately"
-          }
-          onClick={async () => {
-            if (submitting.current || runUrl === null) {
-              return;
+        <div className="bm-build-history__actions">
+          <button
+            type="button"
+            role="menuitem"
+            className="bm-build-history__run-button"
+            disabled={runUrl === null || runState !== "idle"}
+            title={
+              runUrl === null
+                ? "Job is not buildable or you do not have build permission"
+                : "Queue a new build immediately"
             }
-            submitting.current = true;
-            setRunState("queuing");
-            setRunError(null);
-            try {
-              const response = await fetch(runUrl, {
-                method: "POST",
-                headers: window.crumb.wrap({}),
-                redirect: "error",
-              });
-              if (response.status !== 201) {
-                throw new Error(
-                  `Jenkins did not accept the build (HTTP ${response.status}).`,
-                );
+            onClick={async () => {
+              if (submitting.current || runUrl === null) {
+                return;
               }
-              setRunState("queued");
-            } catch (error) {
-              submitting.current = false;
-              setRunState("idle");
-              const message =
-                error instanceof Error
-                  ? error.message
-                  : "Build request failed.";
-              setRunError(`${message} Check Jenkins before trying again.`);
-            }
-          }}
-        >
-          {runState === "idle" && "Run"}
-          {runState === "queuing" && "Queuing…"}
-          {runState === "queued" && "Queued"}
-        </button>
+              submitting.current = true;
+              setRunState("queuing");
+              setActionError(null);
+              try {
+                const response = await fetch(runUrl, {
+                  method: "POST",
+                  headers: window.crumb.wrap({}),
+                  redirect: "error",
+                });
+                if (response.status !== 201) {
+                  throw new Error(
+                    `Jenkins did not accept the build (HTTP ${response.status}).`,
+                  );
+                }
+                setRunState("queued");
+              } catch (error) {
+                submitting.current = false;
+                setRunState("idle");
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "Build request failed.";
+                setActionError(`${message} Check Jenkins before trying again.`);
+              }
+            }}
+          >
+            {runState === "idle" && "Run"}
+            {runState === "queuing" && "Queuing…"}
+            {runState === "queued" && "Queued"}
+          </button>
+          {cancelBuild !== null && (
+            <CancelBuildButton
+              key={cancelBuild.url ?? cancelBuild.name}
+              build={cancelBuild}
+              onError={setActionError}
+            />
+          )}
+        </div>
       </div>
-      {runError !== null && (
+      {actionError !== null && (
         <div role="alert" className="bm-build-history__error">
-          {runError}
+          {actionError}
         </div>
       )}
       {builds.length === 0 && (

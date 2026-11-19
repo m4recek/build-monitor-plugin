@@ -32,6 +32,7 @@ const makeJob = (name: string): Job => ({
   targetUrl: `/job/${name}/1/console`,
   previousBuilds: [],
   runUrl: `/job/${name}/build?delay=0sec`,
+  cancelBuild: null,
   status: "successful",
   disabled: false,
   hashCode: 1,
@@ -74,6 +75,76 @@ const board = (jobs: Job[]) => (
 );
 
 describe("paged board", () => {
+  it("shows cancellation only for a running build and disables it without cancellation permission", () => {
+    const job = makeJob("TEST_PROD_cancel");
+    const { container, rerender } = render(board([job]));
+    fireEvent.contextMenu(container.querySelector("a.bm-cell") as HTMLElement);
+    expect(screen.queryByRole("menuitem", { name: /Cancel build/ })).toBeNull();
+    job.cancelBuild = { name: "#934", url: null };
+    rerender(board([job]));
+    expect(screen.getByRole("menuitem", { name: "Cancel build #934" })).toBeDisabled();
+    job.cancelBuild = null;
+    rerender(board([job]));
+    expect(screen.queryByRole("menuitem", { name: /Cancel build/ })).toBeNull();
+  });
+
+  it("posts cancellation once with a crumb, handles the native redirect, and resets for another running build", async () => {
+    const job = makeJob("TEST_PROD_cancel");
+    job.cancelBuild = { name: "#934", url: `${job.url}934/stop` };
+    const request = vi.fn().mockResolvedValue({ ok: true, status: 200, redirected: true, url: window.location.href });
+    const originalCrumb = window.crumb;
+    window.crumb = { wrap: () => ({ JenkinsCrumb: "test-crumb" }) };
+    vi.stubGlobal("fetch", request);
+    try {
+      const { container, rerender } = render(board([job]));
+      fireEvent.contextMenu(container.querySelector("a.bm-cell") as HTMLElement);
+      const cancel = screen.getByRole("menuitem", { name: "Cancel build #934" });
+      fireEvent.click(cancel);
+      fireEvent.click(cancel);
+      expect(request).toHaveBeenCalledExactlyOnceWith(job.cancelBuild.url, {
+        method: "POST", headers: { JenkinsCrumb: "test-crumb" }, redirect: "follow",
+        referrer: window.location.href, referrerPolicy: "same-origin",
+      });
+      expect(screen.getByRole("menuitem", { name: "Canceling build #934" })).toBeDisabled();
+      expect(await screen.findByRole("menuitem", { name: "Cancellation requested for build #934" })).toBeDisabled();
+      expect(screen.getByRole("menu")).toBeVisible();
+      job.cancelBuild = { name: "#935", url: `${job.url}935/stop` };
+      rerender(board([job]));
+      expect(screen.getByRole("menuitem", { name: "Cancel build #935" })).toBeEnabled();
+      job.cancelBuild = null;
+      rerender(board([job]));
+      expect(screen.queryByRole("menuitem", { name: /Cancel/ })).toBeNull();
+    } finally {
+      window.crumb = originalCrumb;
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each([
+    { ok: false, status: 403, redirected: false },
+    { ok: false, status: 500, redirected: false },
+    { ok: true, status: 200, redirected: true, url: "http://localhost/login" },
+  ])("keeps cancellation errors visible without reporting acceptance: %j", async response => {
+    const job = makeJob("TEST_PROD_cancel");
+    job.cancelBuild = { name: "#934", url: `${job.url}934/stop` };
+    const request = vi.fn().mockResolvedValue(response);
+    const originalCrumb = window.crumb;
+    window.crumb = { wrap: () => ({}) };
+    vi.stubGlobal("fetch", request);
+    try {
+      const { container } = render(board([job]));
+      fireEvent.contextMenu(container.querySelector("a.bm-cell") as HTMLElement);
+      fireEvent.click(screen.getByRole("menuitem", { name: "Cancel build #934" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("Jenkins did not accept cancellation");
+      expect(screen.getByRole("menuitem", { name: "Cancel build #934" })).toBeEnabled();
+      expect(screen.queryByRole("menuitem", { name: /Cancellation requested/ })).toBeNull();
+      expect(request).toHaveBeenCalledOnce();
+    } finally {
+      window.crumb = originalCrumb;
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("renders weighted stage boundaries and a fixed waiting strip without hiding build details", () => {
     const job = makeJob("TEST_PROD_stages");
     job.status = "running";

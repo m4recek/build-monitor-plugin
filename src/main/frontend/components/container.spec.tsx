@@ -31,6 +31,7 @@ beforeEach(() => {
           targetUrl: `/job/${index}/1/console`,
           previousBuilds: [],
           runUrl: `/job/${index}/build?delay=0sec`,
+          cancelBuild: null,
           status: "successful",
           progress: 0,
           stageProgress: null,

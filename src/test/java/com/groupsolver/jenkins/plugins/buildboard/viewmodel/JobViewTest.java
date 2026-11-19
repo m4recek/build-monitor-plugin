@@ -18,6 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.groupsolver.jenkins.plugins.buildboard.facade.RelativeLocation;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.model.Result;
@@ -98,6 +99,42 @@ class JobViewTest {
         when(project.hasPermission(Item.BUILD)).thenReturn(true);
         when(project.isBuildable()).thenReturn(false);
         assertNull(view.runUrl());
+    }
+
+    @Test
+    void cancellation_targets_the_exact_running_build_and_respects_cancel_permission() {
+        FreeStyleProject project = mock(FreeStyleProject.class);
+        FreeStyleBuild running = mock(FreeStyleBuild.class);
+        when(relativeLocation.url()).thenReturn("job/Tests/job/example/");
+        when(project.getLastBuild()).thenReturn(running);
+        when(running.isBuilding()).thenReturn(true);
+        when(running.getNumber()).thenReturn(934);
+        when(running.getDisplayName()).thenReturn("#934");
+        when(project.hasPermission(Item.CANCEL)).thenReturn(true);
+        view = new JobView(project, List.of(), false, relativeLocation, new Date());
+        assertThat(view.cancelBuild(), is(new JobView.CancelBuild("#934", "job/Tests/job/example/934/stop")));
+        when(project.hasPermission(Item.CANCEL)).thenReturn(false);
+        assertThat(view.cancelBuild(), is(new JobView.CancelBuild("#934", null)));
+        when(running.isBuilding()).thenReturn(false);
+        assertNull(view.cancelBuild());
+        when(project.getLastBuild()).thenReturn(null);
+        assertNull(view.cancelBuild());
+    }
+
+    @Test
+    void cancellation_finds_an_older_concurrent_build_when_the_latest_build_has_finished() {
+        FreeStyleProject project = mock(FreeStyleProject.class);
+        FreeStyleBuild completed = mock(FreeStyleBuild.class);
+        FreeStyleBuild running = mock(FreeStyleBuild.class);
+        when(relativeLocation.url()).thenReturn("job/Tests/job/example/");
+        when(project.getLastBuild()).thenReturn(completed);
+        when(completed.getPreviousBuildInProgress()).thenReturn(running);
+        when(running.isBuilding()).thenReturn(true);
+        when(running.getNumber()).thenReturn(933);
+        when(running.getDisplayName()).thenReturn("#933");
+        when(project.hasPermission(Item.CANCEL)).thenReturn(true);
+        view = new JobView(project, List.of(), false, relativeLocation, new Date());
+        assertThat(view.cancelBuild(), is(new JobView.CancelBuild("#933", "job/Tests/job/example/933/stop")));
     }
 
     /*

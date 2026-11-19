@@ -3,6 +3,7 @@ export interface Job {
   url: string;
   targetUrl: string;
   runUrl: string | null;
+  cancelBuild: { name: string; url: string | null } | null;
   previousBuilds: {
     name: string;
     url: string;
